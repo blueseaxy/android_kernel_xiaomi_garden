@@ -41,12 +41,6 @@ static int devfreq_performance_handler(struct devfreq *devfreq,
 	return ret;
 }
 
-static struct devfreq_governor devfreq_performance = {
-	.name = "performance",
-	.get_target_freq = devfreq_performance_func,
-	.event_handler = devfreq_performance_handler,
-};
-
 static int __init devfreq_performance_init(void)
 {
 	return devfreq_add_governor(&devfreq_performance);
@@ -65,3 +59,13 @@ static void __exit devfreq_performance_exit(void)
 }
 module_exit(devfreq_performance_exit);
 MODULE_LICENSE("GPL");
+	*freq = UINT_MAX;
+	return 0;
+}
+
+const struct devfreq_governor devfreq_performance = {
+	.name = "performance",
+	.get_target_freq = devfreq_performance_func,
+	.no_central_polling = true,
+};
+

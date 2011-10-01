@@ -26,19 +26,10 @@ static int devfreq_userspace_func(struct devfreq *df, unsigned long *freq)
 {
 	struct userspace_data *data = df->data;
 
-	if (data->valid) {
-		unsigned long adjusted_freq = data->user_frequency;
-
-		if (df->max_freq && adjusted_freq > df->max_freq)
-			adjusted_freq = df->max_freq;
-
-		if (df->min_freq && adjusted_freq < df->min_freq)
-			adjusted_freq = df->min_freq;
-
-		*freq = adjusted_freq;
-	} else {
+	if (!data->valid)
 		*freq = df->previous_freq; /* No user freq specified yet */
-	}
+	else
+		*freq = data->user_frequency;
 	return 0;
 }
 
@@ -136,12 +127,6 @@ static int devfreq_userspace_handler(struct devfreq *devfreq,
 	return ret;
 }
 
-static struct devfreq_governor devfreq_userspace = {
-	.name = "userspace",
-	.get_target_freq = devfreq_userspace_func,
-	.event_handler = devfreq_userspace_handler,
-};
-
 static int __init devfreq_userspace_init(void)
 {
 	return devfreq_add_governor(&devfreq_userspace);
@@ -160,3 +145,11 @@ static void __exit devfreq_userspace_exit(void)
 }
 module_exit(devfreq_userspace_exit);
 MODULE_LICENSE("GPL");
+const struct devfreq_governor devfreq_userspace = {
+	.name = "userspace",
+	.get_target_freq = devfreq_userspace_func,
+	.init = userspace_init,
+	.exit = userspace_exit,
+	.no_central_polling = true,
+};
+

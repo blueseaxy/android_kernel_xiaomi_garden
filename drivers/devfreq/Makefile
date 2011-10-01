@@ -43,3 +43,4 @@ obj-$(CONFIG_MACH_MT3967)		+= helio-dvfsrc_v2.o helio-dvfsrc-mt3967.o helio-dvfs
 endif
 endif
 
+

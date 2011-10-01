@@ -38,12 +38,6 @@ static int devfreq_powersave_handler(struct devfreq *devfreq,
 	return ret;
 }
 
-static struct devfreq_governor devfreq_powersave = {
-	.name = "powersave",
-	.get_target_freq = devfreq_powersave_func,
-	.event_handler = devfreq_powersave_handler,
-};
-
 static int __init devfreq_powersave_init(void)
 {
 	return devfreq_add_governor(&devfreq_powersave);
@@ -62,3 +56,13 @@ static void __exit devfreq_powersave_exit(void)
 }
 module_exit(devfreq_powersave_exit);
 MODULE_LICENSE("GPL");
+	*freq = 0;
+	return 0;
+}
+
+const struct devfreq_governor devfreq_powersave = {
+	.name = "powersave",
+	.get_target_freq = devfreq_powersave_func,
+	.no_central_polling = true,
+};
+

@@ -98,3 +98,4 @@ Description:
 		frequency requested by governors and min_freq.
 		The max_freq overrides min_freq because max_freq may be
 		used to throttle devices to avoid overheating.
+
