@@ -9,6 +9,30 @@
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/miscdevice.h>
+#include <linux/module.h>
+#include <linux/firmware.h>
+#include <linux/slab.h>
+#include <linux/platform_device.h>
+#include <linux/device.h>
+#include <linux/printk.h>
+#include <linux/ratelimit.h>
+#include <linux/debugfs.h>
+/*#include <linux/mfd/wcd9xxx/core.h>
+#include <linux/mfd/wcd9xxx/wcd9xxx_registers.h>
+#include <linux/mfd/wcd9xxx/wcd9320_registers.h>
+#include <linux/mfd/wcd9xxx/pdata.h>*/
+#include <sound/pcm.h>
+#include <sound/pcm_params.h>
+#include <sound/soc.h>
+#include <sound/soc-dapm.h>
+#include <sound/tlv.h>
+#include <linux/bitops.h>
+#include <linux/delay.h>
+#include <linux/pm_runtime.h>
+#include <linux/kernel.h>
+#include <linux/gpio.h>
+#include <linux/wcd9320.h>
+
 
 #define SOUNDCONTROL_VERSION 4
 
@@ -48,6 +72,11 @@ int mic_boost_limit_min = -20;
 /*
  * Sysfs get/set entries
  */
+void update_headset_boost(int vol_boost)
+{
+	pr_info("Can't find Audio Module");
+
+}
 
 static ssize_t headphones_boost_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
