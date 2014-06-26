@@ -125,10 +125,12 @@ int cpufreq_table_index_unsorted(struct cpufreq_policy *policy,
 		.driver_data = ~0,
 		.frequency = 0,
 	};
+
 	struct cpufreq_frequency_table *pos;
 	struct cpufreq_frequency_table *table = policy->freq_table;
-	unsigned int freq, diff, i = 0;
+	unsigned int freq;
 	int index;
+	unsigned int i, diff;
 
 	pr_debug("request for target %u kHz (relation: %u) for cpu %u\n",
 					target_freq, relation, policy->cpu);
@@ -184,9 +186,9 @@ int cpufreq_table_index_unsorted(struct cpufreq_policy *policy,
 			diff = abs(freq - target_freq);
 			if (diff < optimal.frequency ||
 			    (diff == optimal.frequency &&
-			     freq > table[optimal.driver_data].frequency)) {
+			     freq > table[optimal.index].frequency)) {
 				optimal.frequency = diff;
-				optimal.driver_data = i;
+				optimal.index = i;
 			}
 			break;
 		}
