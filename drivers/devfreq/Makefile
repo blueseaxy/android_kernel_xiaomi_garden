@@ -42,3 +42,4 @@ obj-$(CONFIG_MACH_MT6761)		+= helio-dvfsrc.o helio-dvfsrc-mt6761.o helio-dvfsrc-
 obj-$(CONFIG_MACH_MT3967)		+= helio-dvfsrc_v2.o helio-dvfsrc-mt3967.o helio-dvfsrc-opp-mt3967.o
 endif
 endif
+

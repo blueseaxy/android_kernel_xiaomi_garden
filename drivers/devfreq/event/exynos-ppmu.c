@@ -1,7 +1,7 @@
 /*
  * exynos_ppmu.c - EXYNOS PPMU (Platform Performance Monitoring Unit) support
  *
- * Copyright (c) 2014-2015 Samsung Electronics Co., Ltd.
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd.
  * Author : Chanwoo Choi <cw00.choi@samsung.com>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -206,7 +206,7 @@ static int exynos_ppmu_get_event(struct devfreq_event_dev *edev,
 	return 0;
 }
 
-static const struct devfreq_event_ops exynos_ppmu_ops = {
+static struct devfreq_event_ops exynos_ppmu_ops = {
 	.disable = exynos_ppmu_disable,
 	.set_event = exynos_ppmu_set_event,
 	.get_event = exynos_ppmu_get_event,
@@ -375,8 +375,8 @@ static int of_get_devfreq_events(struct device_node *np,
 			"failed to get child node of devfreq-event devices\n");
 		return -EINVAL;
 	}
-	event_ops = exynos_bus_get_ops(np);
 
+	event_ops = exynos_bus_get_ops(np);
 	count = of_get_child_count(events_np);
 	desc = devm_kzalloc(dev, sizeof(*desc) * count, GFP_KERNEL);
 	if (!desc)
@@ -400,12 +400,14 @@ static int of_get_devfreq_events(struct device_node *np,
 			continue;
 		}
 
-		desc[j].ops = event_ops;
+		desc[j].ops = &exynos_ppmu_ops;
 		desc[j].driver_data = info;
 
 		of_property_read_string(node, "event-name", &desc[j].name);
 
 		j++;
+
+		of_node_put(node);
 	}
 	info->desc = desc;
 
@@ -482,14 +484,15 @@ static int exynos_ppmu_probe(struct platform_device *pdev)
 			"failed to allocate memory devfreq-event devices\n");
 		ret = -ENOMEM;
 		goto err;
+		return -ENOMEM;
 	}
 	edev = info->edev;
 	platform_set_drvdata(pdev, info);
 
 	for (i = 0; i < info->num_events; i++) {
 		edev[i] = devm_devfreq_event_add_edev(&pdev->dev, &desc[i]);
-		if (IS_ERR(edev[i])) {
-			ret = PTR_ERR(edev[i]);
+		if (IS_ERR(edev)) {
+			ret = PTR_ERR(edev);
 			dev_err(&pdev->dev,
 				"failed to add devfreq-event device\n");
 			goto err;
@@ -514,6 +517,11 @@ static int exynos_ppmu_remove(struct platform_device *pdev)
 
 	return 0;
 }
+
+static struct of_device_id exynos_ppmu_id_match[] = {
+	{ .compatible = "samsung,exynos-ppmu", },
+	{ /* sentinel */ },
+};
 
 static struct platform_driver exynos_ppmu_driver = {
 	.probe	= exynos_ppmu_probe,
