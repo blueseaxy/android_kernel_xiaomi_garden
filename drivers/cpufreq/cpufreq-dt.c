@@ -153,6 +153,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	unsigned int transition_latency;
 	bool fallback = false;
 	const char *name;
+	bool need_update = false;
 	int ret;
 
 	cpu_dev = get_cpu_device(policy->cpu);
@@ -186,7 +187,6 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		else
 			goto out_put_reg_clk;
 	}
-
 	/*
 	 * OPP layer will be taking care of regulators now, but it needs to know
 	 * the name of the regulator first.
@@ -211,6 +211,19 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	priv->reg_name = name;
 	priv->opp_table = opp_table;
 
+	/* Get OPP-sharing information from "operating-points-v2" bindings */
+	ret = of_get_cpus_sharing_opps(cpu_dev, policy->cpus);
+	if (ret) {
+		/*
+		 * operating-points-v2 not supported, fallback to old method of
+		 * finding shared-OPPs for backward compatibility.
+		 */
+		if (ret == -ENOENT)
+			need_update = true;
+		else
+			goto out_node_put;
+	}
+
 	/*
 	 * Initialize OPP tables for all policy->cpus. They will be shared by
 	 * all CPUs which have marked their CPUs shared with OPP bindings.
@@ -223,6 +236,24 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	 */
 	if (!dev_pm_opp_of_cpumask_add_table(policy->cpus))
 		priv->have_static_opps = true;
+	of_cpumask_init_opp_table(policy->cpus);
+
+	if (need_update) {
+		struct cpufreq_dt_platform_data *pd = cpufreq_get_driver_data();
+
+		if (!pd || !pd->independent_clocks)
+			cpumask_setall(policy->cpus);
+
+		/*
+		 * OPP tables are initialized only for policy->cpu, do it for
+		 * others as well.
+		 */
+		set_cpus_sharing_opps(cpu_dev, policy->cpus);
+
+		of_property_read_u32(np, "clock-latency", &transition_latency);
+	} else {
+		transition_latency = dev_pm_opp_get_max_clock_latency(cpu_dev);
+	}
 
 	/*
 	 * But we need OPP table to function so if it is not there let's
@@ -255,6 +286,50 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	}
 
 	priv->reg_name = name;
+	of_property_read_u32(np, "voltage-tolerance", &priv->voltage_tolerance);
+
+	if (!transition_latency)
+		transition_latency = CPUFREQ_ETERNAL;
+
+	if (!IS_ERR(cpu_reg)) {
+		unsigned long opp_freq = 0;
+
+		/*
+		 * Disable any OPPs where the connected regulator isn't able to
+		 * provide the specified voltage and record minimum and maximum
+		 * voltage levels.
+		 */
+		while (1) {
+			struct dev_pm_opp *opp;
+			unsigned long opp_uV, tol_uV;
+
+			rcu_read_lock();
+			opp = dev_pm_opp_find_freq_ceil(cpu_dev, &opp_freq);
+			if (IS_ERR(opp)) {
+				rcu_read_unlock();
+				break;
+			}
+			opp_uV = dev_pm_opp_get_voltage(opp);
+			rcu_read_unlock();
+
+			tol_uV = opp_uV * priv->voltage_tolerance / 100;
+			if (regulator_is_supported_voltage(cpu_reg, opp_uV,
+							   opp_uV + tol_uV)) {
+				if (opp_uV < min_uV)
+					min_uV = opp_uV;
+				if (opp_uV > max_uV)
+					max_uV = opp_uV;
+			} else {
+				dev_pm_opp_disable(cpu_dev, opp_freq);
+			}
+
+			opp_freq++;
+		}
+
+		ret = regulator_set_voltage_time(cpu_reg, min_uV, max_uV);
+		if (ret > 0)
+			transition_latency += ret * 1000;
+	}
 
 	ret = dev_pm_opp_init_cpufreq_table(cpu_dev, &freq_table);
 	if (ret) {
@@ -303,6 +378,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
          */
 	policy->up_transition_delay_us = transition_latency / NSEC_PER_USEC;
 	policy->down_transition_delay_us = 50000; /* 50ms */
+	of_node_put(np);
 
 	return 0;
 
@@ -315,6 +391,9 @@ out_free_opp:
 out_put_regulator:
 	if (name)
 		dev_pm_opp_put_regulator(cpu_dev);
+	of_cpumask_free_opp_table(policy->cpus);
+out_node_put:
+	of_node_put(np);
 out_put_reg_clk:
 	clk_put(cpu_clk);
 
@@ -332,6 +411,7 @@ static int cpufreq_exit(struct cpufreq_policy *policy)
 	if (priv->reg_name)
 		dev_pm_opp_put_regulator(priv->opp_table);
 
+	of_cpumask_free_opp_table(policy->related_cpus);
 	clk_put(policy->clk);
 	kfree(priv);
 
