@@ -367,6 +367,8 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	if (!transition_latency)
 		transition_latency = CPUFREQ_ETERNAL;
 
+	}
+
 	policy->cpuinfo.transition_latency = transition_latency;
 
 /*	policy->cpuinfo.transition_latency = transition_latency;
