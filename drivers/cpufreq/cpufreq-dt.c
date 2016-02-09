@@ -181,6 +181,10 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		 */
 		if (dev_pm_opp_get_sharing_cpus(cpu_dev, policy->cpus))
 			fallback = true;
+		if (ret == -ENOENT)
+			opp_v1 = true;
+		else
+			goto out_put_reg_clk;
 	}
 
 	/*
@@ -194,7 +198,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 			ret = PTR_ERR(opp_table);
 			dev_err(cpu_dev, "Failed to set regulator for cpu%d: %d\n",
 				policy->cpu, ret);
-			goto out_put_clk;
+			goto out_put_reg_clk;
 		}
 	}
 
@@ -251,7 +255,6 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 	}
 
 	priv->reg_name = name;
-	of_property_read_u32(np, "voltage-tolerance", &priv->voltage_tolerance);
 
 	ret = dev_pm_opp_init_cpufreq_table(cpu_dev, &freq_table);
 	if (ret) {
@@ -311,8 +314,8 @@ out_free_opp:
 	kfree(priv);
 out_put_regulator:
 	if (name)
-		dev_pm_opp_put_regulator(opp_table);
-out_put_clk:
+		dev_pm_opp_put_regulator(cpu_dev);
+out_put_reg_clk:
 	clk_put(cpu_clk);
 
 	return ret;
