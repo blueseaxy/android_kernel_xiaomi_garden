@@ -33,6 +33,7 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
 			enable-method = "psci";
+                        clock-frequency= <2400000>;
     			reg = <0x000>;
 		};
 

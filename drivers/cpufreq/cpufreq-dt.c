@@ -244,6 +244,15 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 				__func__, ret);
 	}
 
+	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+	if (!priv) {
+		ret = -ENOMEM;
+		goto out_free_opp;
+	}
+
+	priv->reg_name = name;
+	of_property_read_u32(np, "voltage-tolerance", &priv->voltage_tolerance);
+
 	ret = dev_pm_opp_init_cpufreq_table(cpu_dev, &freq_table);
 	if (ret) {
 		dev_err(cpu_dev, "failed to init cpufreq table: %d\n", ret);
@@ -281,7 +290,9 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		transition_latency = CPUFREQ_ETERNAL;
 
 	policy->cpuinfo.transition_latency = transition_latency;
-	policy->dvfs_possible_from_any_cpu = true;
+
+/*	policy->cpuinfo.transition_latency = transition_latency;
+*/	policy->dvfs_possible_from_any_cpu = true;
 
         /*
          * Android: set default parameters for parity between schedutil and

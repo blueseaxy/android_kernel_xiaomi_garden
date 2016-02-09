@@ -18,13 +18,133 @@
 
 /* FINGERPRINT start */
 /*
+
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu0: cpu@000 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x000>;
+			enable-method = "psci";
+			clock-frequency = <2301000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu1: cpu@001 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x001>;
+			enable-method = "psci";
+			clock-frequency = <2301000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu2: cpu@002 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x002>;
+			enable-method = "psci";
+			clock-frequency = <2301000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+		cpu3: cpu@003 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x003>;
+			enable-method = "psci";
+			clock-frequency = <2301000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu4: cpu@100 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x100>;
+			enable-method = "psci";
+			clock-frequency = <1800000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu5: cpu@101 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x101>;
+			enable-method = "psci";
+			clock-frequency = <1800000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu6: cpu@102 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x102>;
+			enable-method = "psci";
+			clock-frequency = <1800000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+		cpu7: cpu@103 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x103>;
+			enable-method = "psci";
+			clock-frequency = <1800000000>;
+			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
+					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
+		};
+
+		cpu-map {
+			cluster0 {
+				core0 {
+					cpu = <&cpu0>;
+				};
+				core1 {
+					cpu = <&cpu1>;
+				};
+				core2 {
+					cpu = <&cpu2>;
+				};
+				core3 {
+					cpu = <&cpu3>;
+				};
+			};
+
+			cluster1 {
+				core0 {
+					cpu = <&cpu4>;
+				};
+				core1 {
+					cpu = <&cpu5>;
+				};
+				core2 {
+					cpu = <&cpu6>;
+				};
+				core3 {
+					cpu = <&cpu7>;
+				};
+			};
+		};
+
+
+
+
+
 &spi0 {
 	#address-cells = <1>;
 	#size-cells = <0>;
 	fingerprint@0 {
 		compatible = "goodix,goodix-fp";
 		reg = <0>;
-		spi-max-frequency = <9000000>;
+		spi-max-frequency = <8000000>;
 		netlink-event = <30>;
 		status = "okay";
 	};
@@ -65,7 +185,7 @@
 		reg = <0>;
 		fpc,enable-wakeup;
 		spi-max-frequency = <10000000>;
-		netlink-event = <36>;
+		netlink-event = <31>;
 		status = "okay";
 	};
 

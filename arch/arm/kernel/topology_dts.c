@@ -29,9 +29,8 @@ static const struct cpu_efficiency table_efficiency[] = {
 	{ "arm,cortex-a73", 3630 },
 	{ "arm,cortex-a72", 4186 },
 	{ "arm,cortex-a57", 3891 },
-	{ "arm,cortex-a53", 2048 },
+	{ "arm,cortex-a53", 4048 },
 	{ "arm,cortex-a35", 1661 },
-	{ NULL, },
 };
 
 static void update_siblings_masks(unsigned int cpuid);

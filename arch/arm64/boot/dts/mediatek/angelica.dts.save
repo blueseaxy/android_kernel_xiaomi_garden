@@ -14,16 +14,8 @@
  * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
  */
 
-#include <dt-bindings/interrupt-controller/arm-gic.h>
-#include <dt-bindings/interrupt-controller/irq.h>
-#include <dt-bindings/pinctrl/mt6765-pinfunc.h>
-#include <dt-bindings/memory/mt6765-larb-port.h>
-#include <dt-bindings/mmc/mt6765-msdc.h>
-#include <dt-bindings/clock/mt6765-clk.h>
-#include <dt-bindings/iio/mt635x-auxadc.h>
-#include <dt-bindings/gce/mt6765-gce.h>
-#include <generated/autoconf.h>
-
+#include "custom_common.dtsi"
+#include "to
 /dts-v1/;
 
 / {
@@ -35,11 +27,7 @@
 
 	/* chosen */
 	chosen: chosen {
-		bootargs = "console=tty0 console=ttyS0,921600n1 vmalloc=400M \
-slub_debug=OFZPU page_owner=on \
-swiotlb=noforce androidboot.hardware=mt6765 \
-maxcpus=8 loop.max_part=7 \
-firmware_class.path=/vendor/firmware";
+		bootargs = "boot_cpus=0,1,2,3,4,5,6,7,8 sched_enable_hmp=1 ";
 		kaslr-seed = <0 0>;
 	};
 
@@ -52,7 +40,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x000>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -62,7 +50,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x001>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -72,7 +60,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x002>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -82,7 +70,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x003>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
