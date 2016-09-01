@@ -45,13 +45,13 @@
 #define SEG3_GPU_DVFS_FREQ1			(980000)	/* KHz */
 #define SEG3_GPU_DVFS_FREQ2			(960000)	/* KHz */
 
-#define SEG3_GPU_DVFS_VOLT0			(100000)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VOLT1			(100000)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VOLT2			(100000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT0			(140000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT1			(130000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT2			(120000)		/* mV x 100 */
 
-#define SEG3_GPU_DVFS_VSRAM0			(100500)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VSRAM1			(100500)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VSRAM2			(100500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM0			(160500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM1			(140500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM2			(130500)		/* mV x 100 */
 
 /**************************************************
  * MT6765T segment_4 : GPU DVFS OPP table Setting
@@ -128,7 +128,7 @@
 #define GPU_ACT_REF_POWER			(90085)		/* mW  */
 #define GPU_ACT_REF_FREQ			(900000)	/* KHz */
 #define GPU_ACT_REF_VOLT			(90000)		/* mV x 100 */
-#define GPU_DVFS_PTPOD_DISABLE_VOLT		(75000)		/* mV x 100 */
+#define GPU_DVFS_PTPOD_DISABLE_VOLT		(79000)		/* mV x 100 */
 
 /**************************************************
  * Log Setting
@@ -148,9 +148,10 @@
  **************************************************/
 #define MT_GPUFREQ_OPP_STRESS_TEST
 #define MT_GPUFREQ_STATIC_PWR_READY2USE
+/*
 #define MT_GPUFREQ_LOW_BATT_VOLT_PROTECT
-#define MT_GPUFREQ_BATT_PERCENT_PROTECT /* todo: disable it */
-#define MT_GPUFREQ_BATT_OC_PROTECT
+#define MT_GPUFREQ_BATT_PERCENT_PROTECT 
+#define MT_GPUFREQ_BATT_OC_PROTECT*/
 #define MT_GPUFREQ_DYNAMIC_POWER_TABLE_UPDATE
 
 /**************************************************

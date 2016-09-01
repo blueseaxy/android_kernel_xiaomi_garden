@@ -1040,8 +1040,8 @@ out:
  */
 static int mt_gpufreq_power_limited_proc_show(struct seq_file *m, void *v)
 {
-	seq_puts(m, "GPU-DVFS power limited state ....\n");
-	seq_printf(m, "g_batt_oc_limited_ignore_state = %d\n",
+	seq_puts(m, "GPU-DVFS Report limit State....\n");
+	/*seq_printf(m, "g_batt_oc_limited_ignore_state = %d\n",
 		g_batt_oc_limited_ignore_state);
 	seq_printf(m, "g_batt_percent_limited_ignore_state = %d\n",
 		g_batt_percent_limited_ignore_state);
@@ -1051,6 +1051,7 @@ static int mt_gpufreq_power_limited_proc_show(struct seq_file *m, void *v)
 		g_thermal_protect_limited_ignore_state);
 	seq_printf(m, "g_pbm_limited_ignore_state = %d\n",
 		g_pbm_limited_ignore_state);
+        */
 	return 0;
 }
 
