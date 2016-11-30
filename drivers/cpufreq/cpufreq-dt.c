@@ -330,6 +330,7 @@ static int cpufreq_init(struct cpufreq_policy *policy)
 		if (ret > 0)
 			transition_latency += ret * 1000;
 	}
+	priv->opp_table = opp_table;
 
 	ret = dev_pm_opp_init_cpufreq_table(cpu_dev, &freq_table);
 	if (ret) {
@@ -392,11 +393,13 @@ out_free_opp:
 	kfree(priv);
 out_put_regulator:
 	if (name)
-		dev_pm_opp_put_regulator(cpu_dev);
 	of_cpumask_free_opp_table(policy->cpus);
 out_node_put:
 	of_node_put(np);
 out_put_reg_clk:
+
+		dev_pm_opp_put_regulator(opp_table);
+out_put_clk:
 	clk_put(cpu_clk);
 
 	return ret;
