@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2018 MediaTek Inc.
  *
@@ -527,6 +528,7 @@ static void get_pm_qos_info(char *p)
 	p += sprintf(p, "%-24s: %s\n",
 			"Force End Timestamp", dvfsrc->force_end);
 }
+#ifdef vcore_reg_id
 		if (vcore_reg_id) {
 			vcore_uv = regulator_get_voltage(vcore_reg_id);
 			opp_uv = get_vcore_opp_volt(get_min_opp_for_vcore(opp));
@@ -535,7 +537,7 @@ static void get_pm_qos_info(char *p)
 					vcore_uv, opp_uv,
 					dvfsrc_read(dvfsrc, DVFSRC_LEVEL),
 					spm_vcorefs_get_dvfs_opp());
-
+#endif
 char *dvfsrc_dump_reg(char *ptr)
 {
 	char buf[1024];
