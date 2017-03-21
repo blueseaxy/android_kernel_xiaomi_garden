@@ -1396,6 +1396,7 @@ static int cpufreq_online(unsigned int cpu)
 			per_cpu(cpufreq_cpu_data, j) = policy;
 			add_cpu_dev_symlink(policy, j);
 		}
+		write_unlock_irqrestore(&cpufreq_driver_lock, flags);
 	} else {
 		policy->min = policy->user_policy.min;
 		policy->max = policy->user_policy.max;
