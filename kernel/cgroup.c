@@ -240,23 +240,6 @@ static struct cftype cgroup_legacy_base_files[];
 
 static int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask);
 static void cgroup_lock_and_drain_offline(struct cgroup *cgrp);
-
-/* cgroup optional features */
-enum cgroup_opt_features {
-#ifdef CONFIG_PSI
-	OPT_FEATURE_PRESSURE,
-#endif
-	OPT_FEATURE_COUNT
-};
-
-static const char *cgroup_opt_feature_names[OPT_FEATURE_COUNT] = {
-#ifdef CONFIG_PSI
-	"pressure",
-#endif
-};
-
-static u16 cgroup_feature_disable_mask __read_mostly;
-
 static int cgroup_apply_control(struct cgroup *cgrp);
 static void cgroup_finalize_control(struct cgroup *cgrp, int ret);
 static void css_task_iter_advance(struct css_task_iter *it);
@@ -3574,48 +3557,23 @@ static void cgroup_pressure_release(struct kernfs_open_file *of)
 {
 	psi_trigger_replace(&of->priv, NULL);
 }
-
-bool cgroup_psi_enabled(void)
-{
-	return (cgroup_feature_disable_mask & (1 << OPT_FEATURE_PRESSURE)) == 0;
-}
-
-#else /* CONFIG_PSI */
-bool cgroup_psi_enabled(void)
-{
-	return false;
-}
-
 #endif /* CONFIG_PSI */
 
 static int cgroup_file_open(struct kernfs_open_file *of)
 {
 	struct cftype *cft = of->kn->priv;
-	struct cgroup_file_ctx *ctx;
-	int ret;
 
-	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
-	if (!ctx)
-		return -ENOMEM;
-	of->priv = ctx;
-
-	if (!cft->open)
-		return 0;
-
-	ret = cft->open(of);
-	if (ret)
-		kfree(ctx);
-	return ret;
+	if (cft->open)
+		return cft->open(of);
+	return 0;
 }
 
 static void cgroup_file_release(struct kernfs_open_file *of)
 {
 	struct cftype *cft = of->kn->priv;
-	struct cgroup_file_ctx *ctx = of->priv;
 
 	if (cft->release)
 		cft->release(of);
-	kfree(ctx);
 }
 
 static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
@@ -3832,8 +3790,6 @@ static int cgroup_addrm_files(struct cgroup_subsys_state *css,
 restart:
 	for (cft = cfts; cft != cft_end && cft->name[0] != '\0'; cft++) {
 		/* does cft->flags tell us to skip this file on @cgrp? */
-		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-			continue;
 		if ((cft->flags & __CFTYPE_ONLY_ON_DFL) && !cgroup_on_dfl(cgrp))
 			continue;
 		if ((cft->flags & __CFTYPE_NOT_ON_DFL) && cgroup_on_dfl(cgrp))
@@ -3910,9 +3866,6 @@ static int cgroup_init_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
 		struct kernfs_ops *kf_ops;
 
 		WARN_ON(cft->ss || cft->kf_ops);
-
-		if ((cft->flags & CFTYPE_PRESSURE) && !cgroup_psi_enabled())
-			continue;
 
 		if (cft->seq_start)
 			kf_ops = &cgroup_kf_ops;
@@ -4493,7 +4446,6 @@ void css_task_iter_end(struct css_task_iter *it)
  */
 int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
 {
-
 	LIST_HEAD(preloaded_csets);
 	struct cgrp_cset_link *link;
 	struct css_task_iter it;
@@ -4988,106 +4940,11 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
 		*pos = cgroup_pid_fry(seq_css(s)->cgroup, *p);
 		return p;
 	}
-	struct cgroup_file_ctx *ctx = of->priv;
-
-	if (ctx->procs.started)
-		css_task_iter_end(&ctx->procs.iter);
 }
 
 static int cgroup_pidlist_show(struct seq_file *s, void *v)
 {
 	seq_printf(s, "%d\n", *(int *)v);
-	struct kernfs_open_file *of = s->private;
-	struct cgroup_file_ctx *ctx = of->priv;
-
-	if (pos)
-		(*pos)++;
-
-	return css_task_iter_next(&ctx->procs.iter);
-}
-
-static void *__cgroup_procs_start(struct seq_file *s, loff_t *pos,
-				  unsigned int iter_flags)
-{
-	struct kernfs_open_file *of = s->private;
-	struct cgroup *cgrp = seq_css(s)->cgroup;
-	struct cgroup_file_ctx *ctx = of->priv;
-	struct css_task_iter *it = &ctx->procs.iter;
-
-	/*
-	 * When a seq_file is seeked, it's always traversed sequentially
-	 * from position 0, so we can simply keep iterating on !0 *pos.
-	 */
-	if (!ctx->procs.started) {
-		if (WARN_ON_ONCE((*pos)))
-			return ERR_PTR(-EINVAL);
-		css_task_iter_start(&cgrp->self, iter_flags, it);
-		ctx->procs.started = true;
-	} else if (!(*pos)) {
-		css_task_iter_end(it);
-		css_task_iter_start(&cgrp->self, iter_flags, it);
-	} else
-		return it->cur_task;
-
-	return cgroup_procs_next(s, NULL, NULL);
-}
-
-static void *cgroup_procs_start(struct seq_file *s, loff_t *pos)
-{
-	struct cgroup *cgrp = seq_css(s)->cgroup;
-
-	/*
-	 * All processes of a threaded subtree belong to the domain cgroup
-	 * of the subtree.  Only threads can be distributed across the
-	 * subtree.  Reject reads on cgroup.procs in the subtree proper.
-	 * They're always empty anyway.
-	 */
-	if (cgroup_is_threaded(cgrp))
-		return ERR_PTR(-EOPNOTSUPP);
-
-	return __cgroup_procs_start(s, pos, CSS_TASK_ITER_PROCS |
-					    CSS_TASK_ITER_THREADED);
-}
-
-static int cgroup_procs_show(struct seq_file *s, void *v)
-{
-       seq_printf(s, "%d\n", task_pid_vnr(v));
-	return 0;
-}
-
-static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
-					 struct cgroup *dst_cgrp,
-					 struct super_block *sb)
-{
-	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
-	struct cgroup *com_cgrp = src_cgrp;
-	struct inode *inode;
-	int ret;
-
-	lockdep_assert_held(&cgroup_mutex);
-
-	/* find the common ancestor */
-	while (!cgroup_is_descendant(dst_cgrp, com_cgrp))
-		com_cgrp = cgroup_parent(com_cgrp);
-
-	/* %current should be authorized to migrate to the common ancestor */
-	inode = kernfs_get_inode(sb, com_cgrp->procs_file.kn);
-	if (!inode)
-		return -ENOMEM;
-
-	ret = inode_permission(inode, MAY_WRITE);
-	iput(inode);
-	if (ret)
-		return ret;
-
-	/*
-	 * If namespaces are delegation boundaries, %current must be able
-	 * to see both source and destination cgroups from its namespace.
-	 */
-	if ((cgrp_dfl_root.flags & CGRP_ROOT_NS_DELEGATE) &&
-	    (!cgroup_is_descendant(src_cgrp, ns->root_cset->dfl_cgrp) ||
-	     !cgroup_is_descendant(dst_cgrp, ns->root_cset->dfl_cgrp)))
-		return -ENOENT;
 
 	return 0;
 }
@@ -5154,7 +5011,7 @@ static struct cftype cgroup_dfl_base_files[] = {
 #ifdef CONFIG_PSI
 	{
 		.name = "io.pressure",
-		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_PRESSURE,
+		.flags = CFTYPE_NOT_ON_ROOT,
 		.seq_show = cgroup_io_pressure_show,
 		.write = cgroup_io_pressure_write,
 		.poll = cgroup_pressure_poll,
@@ -5162,7 +5019,7 @@ static struct cftype cgroup_dfl_base_files[] = {
 	},
 	{
 		.name = "memory.pressure",
-		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_PRESSURE,
+		.flags = CFTYPE_NOT_ON_ROOT,
 		.seq_show = cgroup_memory_pressure_show,
 		.write = cgroup_memory_pressure_write,
 		.poll = cgroup_pressure_poll,
@@ -5170,7 +5027,7 @@ static struct cftype cgroup_dfl_base_files[] = {
 	},
 	{
 		.name = "cpu.pressure",
-		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_PRESSURE,
+		.flags = CFTYPE_NOT_ON_ROOT,
 		.seq_show = cgroup_cpu_pressure_show,
 		.write = cgroup_cpu_pressure_write,
 		.poll = cgroup_pressure_poll,
@@ -6417,15 +6274,6 @@ static int __init cgroup_disable(char *str)
 			    strcmp(token, ss->legacy_name))
 				continue;
 			cgroup_disable_mask |= 1 << i;
-		}
-
-		for (i = 0; i < OPT_FEATURE_COUNT; i++) {
-			if (strcmp(token, cgroup_opt_feature_names[i]))
-				continue;
-			cgroup_feature_disable_mask |= 1 << i;
-			pr_info("Disabling %s control group feature\n",
-				cgroup_opt_feature_names[i]);
-			break;
 		}
 	}
 	return 1;
