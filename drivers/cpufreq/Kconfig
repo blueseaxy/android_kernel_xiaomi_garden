@@ -131,6 +131,12 @@ config CPU_FREQ_DEFAULT_GOV_SCHEDUTIL
 	  have a look at the help section of that governor. The fallback
 	  governor will be 'performance'.
 
+config CPU_FREQ_DEFAULT_GOV_DARKNESS
+	bool "darkness"
+	select CPU_FREQ_GOV_DARKNESS
+	help
+	Use the CPUFreq governor 'darkness' as default.
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -212,7 +218,46 @@ config CPU_FREQ_GOV_CONSERVATIVE
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_INTERACTIVE
+
+config CPU_FREQ_GOV_DARKNESS
+	tristate "'darkness' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  'darkness' - This driver adds a dynamic cpufreq policy governor
+	  designed for latency-sensitive workloads.
+
+	  This governor attempts to reduce the latency of clock
+	  increases so that the system is more responsive to
+	  darkness workloads.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called cpufreq_darkness.
+
+	  For details, take a look at linux/Documentation/cpu-freq.
+
+	  If in doubt, say N.
+
+
+config CPU_BOOST
+	tristate "Event base short term CPU freq boost"
+	depends on CPU_FREQ
+	help
+	  This driver boosts the frequency of one or more CPUs based on
+	  various events that might occur in the system. As of now, the
+	  events it reacts to are:
+	  - Migration of important threads from one CPU to another.
+
+	  If in doubt, say N.
+
+config FINGERPRINT_BOOST
+	bool "Fingerprint Boost"
+	default y
+	help
+	  Boosts available CPUs to max frequency on fingerprint sensor input.
+
+
+
+config CPU_FREQ_GOV_IMPULSE
 	tristate "'interactive' cpufreq policy governor"
 	depends on CPU_FREQ
 	select CPU_FREQ_GOV_ATTR_SET
@@ -382,3 +427,4 @@ config QORIQ_CPUFREQ
 
 endif
 endmenu
+
