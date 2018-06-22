@@ -200,8 +200,8 @@ static int _parse_tag_videolfb(void);
 static void mtkfb_late_resume(void);
 static void mtkfb_early_suspend(void);
 //2020.01.19 longcheer zhaoxiangxiang add for node start
-extern int lcd_thermal_zone_get_temp(void);
-static char lcd_lockdown_info[32] = {0};
+/*extern int lcd_thermal_zone_get_temp;
+*/static char lcd_lockdown_info[32] = {0};
 //2020.01.19 longcheer zhaoxiangxiang add for node end
 #define WAIT_RESUME_TIMEOUT 200
 #define WAIT_SUSPEND_TIMEOUT 1500
@@ -2508,11 +2508,8 @@ static struct fb_info *allocate_fb_by_index(struct device *dev)
 static ssize_t backlight_therm_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	int temperature;
-
-	temperature = lcd_thermal_zone_get_temp();
-
-	return sprintf(buf, "%d\n", temperature);
+	
+return 0;
 }
 
 //2020.01.19 longcheer zhaoxiangxiang add for node start

@@ -3140,8 +3140,8 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 	p->se.vruntime			= 0;
 #ifdef CONFIG_SCHED_WALT
 	p->last_sleep_ts		= 0;
-#endif
 
+#endif
 	INIT_LIST_HEAD(&p->se.group_node);
 	walt_init_new_task_load(p);
 
