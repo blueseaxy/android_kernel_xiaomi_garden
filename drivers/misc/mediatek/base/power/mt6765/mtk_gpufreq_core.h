@@ -26,9 +26,9 @@
 /**************************************************
  * MT6762 segment_2 : GPU DVFS OPP table Setting
  **************************************************/
-#define SEG2_GPU_DVFS_FREQ0			(1000000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ1			(980000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ2			(960000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ0			(780000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ1			(680000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ2			(560000)/* KHz */
 
 #define SEG2_GPU_DVFS_VOLT0			(100000)	/* mV x 100 */
 #define SEG2_GPU_DVFS_VOLT1			(100000)	/* mV x 100 */
@@ -41,9 +41,9 @@
 /**************************************************
  * MT6765 segment_3 : GPU DVFS OPP table Setting
  **************************************************/
-#define SEG3_GPU_DVFS_FREQ0			(1000000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ1			(980000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ2			(960000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ0			(780000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ1			(680000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ2			(560000)	/* KHz */
 
 #define SEG3_GPU_DVFS_VOLT0			(140000)		/* mV x 100 */
 #define SEG3_GPU_DVFS_VOLT1			(130000)		/* mV x 100 */
@@ -213,7 +213,7 @@ static int mt_ ## name ## _proc_open(struct inode *inode, struct file *file)\
  * Operation Definition
  **************************************************/
 #define VOLT_NORMALIZATION(volt)\
-((volt % 925) ? (volt - (volt % 925) + 925) : volt)
+((volt % 999) ? (volt - (volt % 999) + 999) : volt)
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define GPUOP(khz, volt, vsram, idx)	\
 	{	\

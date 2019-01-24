@@ -1348,7 +1348,7 @@ static int __mt_gpufreq_create_procfs(void)
 
 static void __mt_gpufreq_vcore_volt_switch(unsigned int volt_target)
 {
-	if (volt_target > 70000) {
+	if (volt_target > 90000) {
 		pm_qos_update_request(&g_pmic->pm_vgpu, VCORE_OPP_0);
 		g_cur_vcore_opp = VCORE_OPP_0;
 	} else if (volt_target > 65000) {
@@ -2068,8 +2068,8 @@ __mt_gpufreq_get_limited_freq_by_power(unsigned int limited_power)
 	}
 
 	gpufreq_pr_debug("@%s: limited_freq = %d\n", __func__, limited_freq);
-
-	return limited_freq;
+        return 0;
+/*	return limited_freq;*/
 }
 
 #ifdef MT_GPUFREQ_DYNAMIC_POWER_TABLE_UPDATE

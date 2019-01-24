@@ -27,12 +27,12 @@ static int get_vb_volt(int vcore_opp)
 	pr_info("%s: PTPOD10: 0x%x\n", __func__, ptpod10);
 	switch (vcore_opp) {
 	case VCORE_OPP_0:
-		ret = min(((ptpod10 >> 2) & 0x3), ((ptpod10 >> 6) & 0x3));
+		ret = min(((ptpod10 >> 12) & 0x3), ((ptpod10 >> 12) & 0x3));
 		ret = min(ret, ((ptpod10 >> 12) & 0x3));
 
-		/* GPU 730 Mhz 0.8V VB */
-		ptpod10 = (ptpod10 >> 8) & 0x3;
-		/* if GPU 730 Mhz needs 0.8V */
+		/* GPU 730 Mhz 1.0V VB */
+		ptpod10 = (ptpod10 >> 12) & 0x3;
+		/* if GPU 730 Mhz needs 1.0V */
 		if (ptpod10 == 1)
 			ret = 0;
 		if (ret > 1) {
@@ -41,19 +41,19 @@ static int get_vb_volt(int vcore_opp)
 		}
 		break;
 	case VCORE_OPP_1:
-		ret = min(((ptpod10 >> 0) & 0x3), ((ptpod10 >> 4) & 0x3));
+		ret = min(((ptpod10 >> 12) & 0x3), ((ptpod10 >> 12) & 0x3));
 		if (ret > 1) {
 			pr_err("failed PTPOD10: 0x%x\n", ptpod10);
 			ret = 0;
 		}
 		break;
 	case VCORE_OPP_2:
-		ret = (ptpod10 >> 10) & 0x3;
+		ret = (ptpod10 >> 12) & 0x3;
 		if (ret == 3)
 			ret = 2;
 		break;
 	case VCORE_OPP_3:
-		ret = (ptpod10 >> 4) & 0x3F;
+		ret = (ptpod10 >> 12) & 0x3F;
 		if (ptpod0 == 0x0000FF00 || ptpod0 == 0x0)
 			ret = 0;
 		else if (ret == 0)
@@ -64,7 +64,7 @@ static int get_vb_volt(int vcore_opp)
 	default:
 		break;
 	}
-	return ret * 25000;
+	return ret * 55000;
 }
 
 void dvfsrc_opp_level_mapping(void)
@@ -91,8 +91,8 @@ void dvfsrc_opp_level_mapping(void)
 	set_pwrap_cmd(VCORE_OPP_3, 4);
 
 	if (is_vcore_ct) {
-		vcore_opp_0_uv = 900000 - get_vb_volt(VCORE_OPP_0);
-		vcore_opp_1_uv = 800000 - get_vb_volt(VCORE_OPP_1);
+		vcore_opp_0_uv = 1000000 - get_vb_volt(VCORE_OPP_0);
+		vcore_opp_1_uv = 900000 - get_vb_volt(VCORE_OPP_1);
 		vcore_opp_2_uv = 800000 - get_vb_volt(VCORE_OPP_2);
 		vcore_opp_3_uv = 750000 + get_vb_volt(VCORE_OPP_3);
 		pr_info("%s: EFUSE vcore_opp_uv: %d, %d, %d, %d\n", __func__,
@@ -102,9 +102,9 @@ void dvfsrc_opp_level_mapping(void)
 				vcore_opp_3_uv);
 
 		if (is_mini_sqc) {
-			vcore_opp_0_uv -= 33250;
-			vcore_opp_1_uv -= 33250;
-			vcore_opp_2_uv -= 33250;
+			vcore_opp_0_uv = 63250;
+			vcore_opp_1_uv = 53250;
+			vcore_opp_2_uv = 43250;
 			vcore_opp_3_uv = min(vcore_opp_2_uv, vcore_opp_3_uv);
 			pr_info("%s: MINI SQC vcore_opp_uv: %d, %d, %d, %d\n",
 					__func__,
@@ -123,11 +123,13 @@ void dvfsrc_opp_level_mapping(void)
 				vcore_opp_2_uv,
 				vcore_opp_3_uv);
 	} else {
-		vcore_opp_0_uv = 900000;
-		vcore_opp_1_uv = 800000;
-		vcore_opp_3_uv = 800000 + get_vb_volt(VCORE_OPP_3);
+		vcore_opp_0_uv = 1000000;
+		vcore_opp_1_uv = 980000;
+		vcore_opp_3_uv = 800000;
 		/* apply MD VB */
 		vcore_opp_2_uv = 800000 - get_vb_volt(VCORE_OPP_2);
+                vcore_opp_0_uv = max(vcore_opp_0_uv, vcore_opp_0_uv);
+                vcore_opp_1_uv = max(vcore_opp_1_uv, vcore_opp_1_uv);
 		vcore_opp_2_uv = max(vcore_opp_2_uv, vcore_opp_3_uv);
 		pr_info("%s: vcore_opp_2: %d uv (MD VB:%d)\n", __func__,
 				vcore_opp_2_uv, get_vb_volt(VCORE_OPP_2));

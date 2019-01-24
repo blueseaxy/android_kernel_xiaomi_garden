@@ -90,7 +90,7 @@ touchscreen_usb_piugin_data_t g_touchscreen_usb_pulgin = {0};
 EXPORT_SYMBOL(g_touchscreen_usb_pulgin);
 #endif
 
-#define THERMAL_MAX 16
+#define THERMAL_MAX 20
 
 static struct charger_manager *pinfo;
 static struct list_head consumer_head = LIST_HEAD_INIT(consumer_head);
@@ -150,8 +150,8 @@ unsigned int set_chr_input_current_limit(int current_limit)
 
 int get_chr_temperature(int *min_temp, int *max_temp)
 {
-	*min_temp = 25;
-	*max_temp = 60;
+	*min_temp = 22;
+	*max_temp = 70;
 
 	return 0;
 }
@@ -410,9 +410,9 @@ int charger_manager_enable_charging(struct charger_consumer *consumer,
 	return ret;
 }
 
-#define DUAL_CHG_VOLT_PD 7000
-#define DUAL_CHG_CURRENT_MIN 1800000
-#define DUAL_CHG_CURRENT_MAX 2000000
+#define DUAL_CHG_VOLT_PD 9000
+#define DUAL_CHG_CURRENT_MIN 18000000
+#define DUAL_CHG_CURRENT_MAX 20000000
 #define DUAL_CHG_CURRENT_MIN_PD 1600000
 #define DUAL_CHG_CURRENT_MIN_PE2 1500000
 int _charger_manager_set_input_current_limit(struct charger_manager *info,
