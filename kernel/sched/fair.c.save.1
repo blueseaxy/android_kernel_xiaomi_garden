@@ -2785,6 +2785,7 @@ static __init inline void cmp_cputopo_domain_setup(void)
 	arch_build_cpu_topology_domain();
 }
 
+<<<<<<< HEAD
 /* Precomputed fixed inverse multiplies for multiplication by y^n */
 static const u32 runnable_avg_yN_inv[] = {
 	0xffffffff, 0xfa83b2da, 0xf5257d14, 0xefe4b99a, 0xeac0c6e6, 0xe5b906e6,
@@ -2815,6 +2816,21 @@ static const u32 __accumulated_sum_N32[] = {
 	46011, 46376, 46559, 46650, 46696, 46719,
 };
 
+=======
+static inline int per_task_boost(struct task_struct *p)
+{
+	if (p->boost_period) {
+		if (sched_clock() > p->boost_expires) {
+			p->boost_period = 0;
+			p->boost_expires = 0;
+			p->boost = 0;
+		}
+	}
+	return p->boost;
+}
+
+#ifdef CONFIG_SMP
+>>>>>>> 0b8de3209afe... sched: Add task boost feat
 /*
  * Approximate:
  *   val * y^n,    where y^32 ~= 0.5 (~1 scheduling period)
@@ -7133,18 +7149,36 @@ static int cpu_util_wake(int cpu, struct task_struct *p)
 
 static int collect_cluster_info(int cpu, int *total_nr_running, int *cpu_count)
 {
+<<<<<<< HEAD
 	struct sched_domain *sd;
 	struct sched_group *sg;
 	int i;
+=======
+	unsigned long capacity = capacity_orig_of(cpu);
+	unsigned long max_capacity = cpu_rq(cpu)->rd->max_cpu_capacity.val;
+	unsigned long task_boost = per_task_boost(p);
+>>>>>>> 0b8de3209afe... sched: Add task boost feature
 
 	/* Find SD for the start CPU */
 	sd = rcu_dereference(per_cpu(sd_ea, cpu));
 	if (!sd)
 		return 0;
 
+<<<<<<< HEAD
 	*total_nr_running = 0;
 	/* Scan CPUs in all SDs */
 	sg = sd->groups;
+=======
+	if (is_min_capacity_cpu(cpu)) {
+		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+			task_boost > 0 ||
+			schedtune_task_boost(p) > 0)
+			return false;
+	} else { /* mid cap cpu */
+		if (task_boost > 1)
+			return false;
+	}
+>>>>>>> 0b8de3209afe... sched: Add task boost feature
 
 	*cpu_count = cpumask_weight(sched_group_cpus(sg));
 	for_each_cpu(i, sched_group_cpus(sg)) {
@@ -7223,7 +7257,6 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 	int target_cpu = -1;
 	int cpu, i;
 	int cap_min;
-        int isolated_candidate = -1;
 	int prev_cpu = task_cpu(p);
 	bool turning = false;
 
@@ -7560,9 +7593,8 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 				     best_idle_cpu, best_active_cpu,
 				     target_cpu);
 
-	if (target_cpu == -1 && isolated_candidate != -1 &&
-	    cpu_isolated(prev_cpu))
-		target_cpu = isolated_candidate;
+	schedstat_inc(p->se.statistics.nr_wakeups_fbt_count);
+	schedstat_inc(this_rq()->eas_stats.fbt_count);
 
 	return target_cpu;
 }
@@ -7628,7 +7660,69 @@ static int select_energy_cpu_brute(struct task_struct *p, int prev_cpu, int sync
 		goto unlock;
 	}
 
+<<<<<<< HEAD
 	sync_entity_load_avg(&p->se);
+=======
+	rcu_read_unlock();
+
+	return rtg_target;
+}
+
+static inline bool is_many_wakeup(int sibling_count_hint)
+{
+	return sibling_count_hint >= sysctl_sched_many_wakeup_threshold;
+}
+
+#else
+static inline struct cpumask *find_rtg_target(struct task_struct *p)
+{
+	return NULL;
+}
+
+static inline bool is_many_wakeup(int sibling_count_hint)
+{
+	return false;
+}
+#endif
+
+/*
+ * Needs to be called inside rcu_read_lock critical section.
+ * sd is a pointer to the sched domain we wish to use for an
+ * energy-aware placement option.
+ */
+static int find_energy_efficient_cpu(struct sched_domain *sd,
+				     struct task_struct *p,
+				     int cpu, int prev_cpu,
+				     int sync, int sibling_count_hint)
+{
+	int use_fbt = sched_feat(FIND_BEST_TARGET);
+	int cpu_iter, eas_cpu_idx = EAS_CPU_NXT;
+	int delta = 0;
+	int target_cpu = -1;
+	struct energy_env *eenv;
+	struct cpumask *rtg_target = find_rtg_target(p);
+	struct find_best_target_env fbt_env;
+	bool need_idle = wake_to_idle(p);
+	int placement_boost = task_boost_policy(p);
+	u64 start_t = 0;
+	int next_cpu = -1, backup_cpu = -1;
+	int boosted = (schedtune_task_boost(p) > 0 || per_task_boost(p) > 0);
+
+	fbt_env.fastpath = 0;
+
+	if (trace_sched_task_util_enabled())
+		start_t = sched_clock();
+
+	if (need_idle)
+		sync = 0;
+
+	if (sysctl_sched_sync_hint_enable && sync &&
+				bias_to_this_cpu(p, cpu, rtg_target)) {
+		target_cpu = cpu;
+		fbt_env.fastpath = SYNC_WAKEUP;
+		goto out;
+	}
+>>>>>>> 0b8de3209afe... sched: Add task boost feature
 
 	/* Find a cpu with sufficient capacity */
 	next_cpu = find_best_target(p, &backup_cpu, boosted, prefer_idle);
