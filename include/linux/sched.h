@@ -1782,7 +1782,6 @@ struct task_struct {
 	 * of this task
 	 */
 	u32 init_load_pct;
-	u64 last_sleep_ts;
 #endif
 	u64 last_enqueued_ts;
 
