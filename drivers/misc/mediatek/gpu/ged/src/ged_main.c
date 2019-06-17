@@ -469,6 +469,7 @@ static int ged_init(void)
 		GED_LOGE("ged: failed to init FRR Table!\n");
 		goto ERROR;
 	}
+#endif
 #ifdef GED_SKI_SUPPORT
 	err = ged_ski_init();
 	if (unlikely(err != GED_OK)) {
@@ -480,7 +481,7 @@ static int ged_init(void)
 #ifndef GED_BUFFER_LOG_DISABLE
 	ghLogBuf_GPU = ged_log_buf_alloc(512, 128 * 512,
 		GED_LOG_BUF_TYPE_RINGBUFFER, "GPU_FENCE", NULL);
-
+#endif
 #ifdef GED_DEBUG
 	ghLogBuf_GLES = ged_log_buf_alloc(160, 128 * 160,
 		GED_LOG_BUF_TYPE_RINGBUFFER, GED_LOG_BUF_COMMON_GLES, NULL);

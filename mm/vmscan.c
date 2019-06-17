@@ -3116,8 +3116,8 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
 	unsigned long nr_reclaimed;
 	struct scan_control sc = {
 		.nr_to_reclaim = SWAP_CLUSTER_MAX,
-		.gfp_mask = memalloc_noio_flags(gfp_mask),
-		.reclaim_idx = gfp_zone(gfp_mask),
+		/*.gfp_mask = memalloc_noio_flags(gfp_mask),
+		*/.reclaim_idx = gfp_zone(gfp_mask),
 		.order = order,
 		.nodemask = nodemask,
 		.priority = DEF_PRIORITY,

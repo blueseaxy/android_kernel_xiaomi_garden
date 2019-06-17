@@ -110,7 +110,7 @@ modpost_link()
 		info LD vmlinux.o
 	fi
 
-	${LDFINAL} ${LDFLAGS} -r -o ${1} $(modversions) ${objects}
+	${LD} ${LDFLAGS} -r -o ${1} $(modversions) ${objects}
 }
 
 # If CONFIG_LTO_CLANG is selected, we postpone running recordmcount until
@@ -346,24 +346,7 @@ if [ -n "${CONFIG_KALLSYMS}" ]; then
 fi
 
 info LD vmlinux
-# Update RTIC MP object by replacing the place holder
-# with actual MP data of the same size
-# Also double check that object size did not change
-# Note: Check initilally if RTIC_MP_O is not empty or uninitialized,
-# as incase RTIC_MPGEN is set and failure occurs in RTIC_MP_O
-# generation, below check for comparing object sizes fails
-# due to an empty RTIC_MP_O object.
-if [ ! -z ${RTIC_MP_O} ]; then
-	rtic_mp "${kallsyms_vmlinux}" rtic_mp.o .tmp_rtic_mp_sz2 \
-                .tmp_rtic_mp2.c
-	if ! cmp -s .tmp_rtic_mp_sz1 .tmp_rtic_mp_sz2; then
-		echo >&2 'ERROR: RTIC MP object files size mismatch'
-		exit 1
-	fi
-fi
-
-info LDFINAL vmlinux
-	vmlinux_link "${kallsymso}" vmlinux
+vmlinux_link "${kallsymso}" vmlinux
 
 if [ -n "${CONFIG_BUILDTIME_EXTABLE_SORT}" ]; then
 	info SORTEX vmlinux
