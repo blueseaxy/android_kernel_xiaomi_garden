@@ -145,13 +145,13 @@ EXPORT_SYMBOL_GPL(BATTERY_SetUSBState);
 
 unsigned int set_chr_input_current_limit(int current_limit)
 {
-	return 500;
+	return 800;
 }
 
 int get_chr_temperature(int *min_temp, int *max_temp)
 {
 	*min_temp = 25;
-	*max_temp = 30;
+	*max_temp = 60;
 
 	return 0;
 }
