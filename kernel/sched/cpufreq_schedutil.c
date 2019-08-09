@@ -340,7 +340,8 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 	unsigned int next_f;
 	bool busy;
 
-	sugov_set_iowait_boost(sg_cpu, time);
+	flags &= ~SCHED_CPUFREQ_RT_DL;
+
 	if (flags & SCHED_CPUFREQ_PL)
 		return;
 
@@ -352,12 +353,13 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 
 	busy = sugov_cpu_is_busy(sg_cpu);
 
-	if (flags & SCHED_CPUFREQ_DL) {
+	if (flags & SCHED_CPUFREQ_RT_DL) {
 		/* clear cache when it's bypassed */
 		sg_policy->cached_raw_freq = 0;
 		next_f = policy->cpuinfo.max_freq;
 	} else {
-		sugov_get_util(&util, &max, time);
+		sugov_get_util(&util, &max, sg_cpu->cpu);
+
 		sugov_iowait_boost(sg_cpu, &util, &max);
 		next_f = get_next_freq(sg_policy, util, max);
 		/*
@@ -424,7 +426,6 @@ static void sugov_update_shared(struct update_util_data *hook, u64 time,
 	unsigned long util, max;
 	unsigned int next_f;
 	int cid;
-
 
 	if (flags & SCHED_CPUFREQ_PL)
 		return;
@@ -660,12 +661,48 @@ static struct sugov_tunables *sugov_tunables_alloc(struct sugov_policy *sg_polic
 	return tunables;
 }
 
+static void sugov_tunables_save(struct cpufreq_policy *policy,
+		struct sugov_tunables *tunables)
+{
+	int cpu;
+	struct sugov_tunables *cached = per_cpu(cached_tunables, policy->cpu);
+
+	if (!have_governor_per_policy())
+		return;
+
+	if (!cached) {
+		cached = kzalloc(sizeof(*tunables), GFP_KERNEL);
+		if (!cached) {
+			pr_warn("Couldn't allocate tunables for caching\n");
+			return;
+		}
+		for_each_cpu(cpu, policy->related_cpus)
+			per_cpu(cached_tunables, cpu) = cached;
+	}
+
+	cached->up_rate_limit_us = tunables->up_rate_limit_us;
+	cached->down_rate_limit_us = tunables->down_rate_limit_us;
+}
+
 static void sugov_tunables_free(struct sugov_tunables *tunables)
 {
 	if (!have_governor_per_policy())
 		global_tunables = NULL;
 
 	kfree(tunables);
+}
+
+static void sugov_tunables_restore(struct cpufreq_policy *policy)
+{
+	struct sugov_policy *sg_policy = policy->governor_data;
+	struct sugov_tunables *tunables = sg_policy->tunables;
+	struct sugov_tunables *cached = per_cpu(cached_tunables, policy->cpu);
+
+	if (!cached)
+		return;
+
+	tunables->up_rate_limit_us = cached->up_rate_limit_us;
+	tunables->down_rate_limit_us = cached->down_rate_limit_us;
 }
 
 static int sugov_init(struct cpufreq_policy *policy)
