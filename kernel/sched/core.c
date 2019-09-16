@@ -2000,7 +2000,6 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 
 	dest_cpu = cpumask_any(&allowed_mask);
 	if (dest_cpu >= nr_cpu_ids) {
-		/* If p is a kthread, ignore isolated mask. */
 		if (p->flags & PF_KTHREAD)
 			cpumask_and(&allowed_mask, cpu_valid_mask, new_mask);
 		else
@@ -2011,6 +2010,11 @@ static int __set_cpus_allowed_ptr(struct task_struct *p,
 			ret = -EINVAL;
 			goto out;
 		}
+
+	dest_cpu = cpumask_any_and(cpu_valid_mask, new_mask);
+	if (dest_cpu >= nr_cpu_ids) {
+		ret = -EINVAL;
+		goto out;
 	}
 
 	do_set_cpus_allowed(p, new_mask);
