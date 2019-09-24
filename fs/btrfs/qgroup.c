@@ -2405,12 +2405,6 @@ out:
 	if (!btrfs_fs_closing(fs_info))
 		fs_info->qgroup_flags &= ~BTRFS_QGROUP_STATUS_FLAG_RESCAN;
 	if (trans) {
-		ret = update_qgroup_status_item(trans);
-		if (ret < 0) {
-			err = ret;
-			btrfs_err(fs_info, "fail to update qgroup status: %d",
-				  err);
-		}
 	ret = update_qgroup_status_item(trans);
 	if (ret < 0) {
 		err = ret;
