@@ -99,11 +99,11 @@ static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
 	unsigned int freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = input_boost_freq_little;
+		freq = CONFIG_INPUT_BOOST_FREQ_LP;
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
-		freq = input_boost_freq_big;
+		freq = CONFIG_INPUT_BOOST_FREQ_PERF;
 	else
-		freq = input_boost_freq_prime;
+		freq = CONFIG_INPUT_BOOST_FREQ_PERFP;
 	return min(freq, policy->max);
 }
 
@@ -112,11 +112,11 @@ static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 	unsigned int freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = max_boost_freq_little;
+		freq = CONFIG_MAX_BOOST_FREQ_LP;
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
-		freq = max_boost_freq_big;
+		freq = CONFIG_MAX_BOOST_FREQ_PERF;
 	else
-		freq = max_boost_freq_prime;
+		freq = CONFIG_MAX_BOOST_FREQ_PERFP;
 	return min(freq, policy->max);
 }
 
@@ -156,6 +156,8 @@ static void update_online_cpu_policy(void)
 	/* Only one CPU from each cluster needs to be updated */
 	get_online_cpus();
 	cpu = cpumask_first_and(cpu_lp_mask, cpu_online_mask);
+	cpufreq_update_policy(cpu);
+	cpu = cpumask_first_and(cpu_perf_mask, cpu_online_mask);
 	cpufreq_update_policy(cpu);
 	cpu = cpumask_first_and(cpu_perf_mask, cpu_online_mask);
 	cpufreq_update_policy(cpu);
