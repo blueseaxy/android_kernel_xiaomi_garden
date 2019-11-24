@@ -335,6 +335,17 @@ config MAX_BOOST_FREQ_PERF
 	help
 	  Max-boost frequency for the performance CPU cluster.
 
+config MAX_BOOST_FREQ_PERFP
+      int "Boost To Max"
+      default "0"
+      help 
+       no have criteria.
+
+config INPUT_BOOST_FREQ_PERFP
+      int "Boosting Input Boost Perf"
+      default "0"
+      help
+       no have criteria
 endif
 
 comment "CPU frequency scaling drivers"

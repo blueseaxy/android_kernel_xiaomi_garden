@@ -30,9 +30,7 @@
 #include <linux/suspend.h>
 #include <linux/syscore_ops.h>
 #include <linux/tick.h>
-#ifdef CONFIG_SMP
 #include <linux/sched.h>
-#endif
 #include <trace/events/power.h>
 
 static LIST_HEAD(cpufreq_policy_list);
@@ -559,9 +557,7 @@ static void cpufreq_notify_post_transition(struct cpufreq_policy *policy,
 void cpufreq_freq_transition_begin(struct cpufreq_policy *policy,
 		struct cpufreq_freqs *freqs)
 {
-#ifdef CONFIG_SMP
 	int cpu;
-#endif
 
 	/*
 	 * Catch double invocations of _begin() which lead to self-deadlock.
@@ -589,13 +585,13 @@ wait:
 
 	spin_unlock(&policy->transition_lock);
 
-	scale_freq_capacity(policy->cpus, freqs->new, policy->cpuinfo.max_freq);
+scale_freq_capacity(policy->cpus, freqs->new, policy->cpuinfo.max_freq);
 	mtk_scale_freq_capacity(policy, freqs);
 #ifdef CONFIG_SMP
 	for_each_cpu(cpu, policy->cpus)
 		trace_cpu_capacity(capacity_curr_of(cpu), cpu);
 #endif
-
+	
 	cpufreq_notify_transition(policy, freqs, CPUFREQ_PRECHANGE);
 }
 EXPORT_SYMBOL_GPL(cpufreq_freq_transition_begin);
@@ -847,6 +843,9 @@ static ssize_t store_##file_name					\
 	int ret, temp;							\
 	struct cpufreq_policy new_policy;				\
 									\
+	if (&policy->object == &policy->min)				\
+		return count;						\
+									\
 	memcpy(&new_policy, policy, sizeof(*policy));			\
 	new_policy.min = policy->user_policy.min;			\
 	new_policy.max = policy->user_policy.max;			\
@@ -904,6 +903,13 @@ static ssize_t store_scaling_governor(struct cpufreq_policy *policy,
 	int ret;
 	char	str_governor[16];
 	struct cpufreq_policy new_policy;
+
+	/*
+	 * Force the LITTLE CPU cluster to use the default govenor (performance)
+	 * because keeping it at its maximum frequency is best.
+	 */
+	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
+		return count;
 
 	memcpy(&new_policy, policy, sizeof(*policy));
 
@@ -2640,13 +2646,6 @@ int cpufreq_register_driver(struct cpufreq_driver *driver_data)
 
 	if (cpufreq_disabled())
 		return -ENODEV;
-
-	/*
-	 * The cpufreq core depends heavily on the availability of device
-	 * structure, make sure they are available before proceeding further.
-	 */
-	if (!get_cpu_device(0))
-		return -EPROBE_DEFER;
 
 	if (!driver_data || !driver_data->verify || !driver_data->init ||
 	    !(driver_data->setpolicy || driver_data->target_index ||

@@ -19,27 +19,33 @@
 #include <uapi/linux/sched/types.h>
 #endif
 
-static unsigned int input_boost_freq_lp __read_mostly =
+static unsigned int input_boost_freq_little __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ_LP;
-static unsigned int input_boost_freq_hp __read_mostly =
+static unsigned int input_boost_freq_big __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ_PERF;
-static unsigned int max_boost_freq_lp __read_mostly =
+static unsigned int input_boost_freq_prime __read_mostly =
+	CONFIG_INPUT_BOOST_FREQ_PERFP;
+static unsigned int max_boost_freq_little __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_LP;
-static unsigned int max_boost_freq_hp __read_mostly =
+static unsigned int max_boost_freq_big __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_PERF;
+static unsigned int max_boost_freq_prime __read_mostly =
+	CONFIG_MAX_BOOST_FREQ_PERFP;
 
 static unsigned short input_boost_duration __read_mostly =
 	CONFIG_INPUT_BOOST_DURATION_MS;
 static unsigned short wake_boost_duration __read_mostly =
 	CONFIG_WAKE_BOOST_DURATION_MS;
 
-module_param(input_boost_freq_lp, uint, 0644);
-module_param(input_boost_freq_hp, uint, 0644);
-module_param(max_boost_freq_lp, uint, 0644);
-module_param(max_boost_freq_hp, uint, 0644);
-
+module_param(input_boost_freq_little, uint, 0644);
+module_param(input_boost_freq_big, uint, 0644);
+module_param(input_boost_freq_prime, uint, 0644);
+module_param(max_boost_freq_little, uint, 0644);
+module_param(max_boost_freq_big, uint, 0644);
+module_param(max_boost_freq_prime, uint, 0644);
 module_param(input_boost_duration, short, 0644);
 module_param(wake_boost_duration, short, 0644);
+
 
 /* Available bits for boost state */
 enum {
@@ -74,10 +80,11 @@ static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
 	unsigned int freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = input_boost_freq_lp;
+		freq = input_boost_freq_little;
+	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
+		freq = input_boost_freq_big;
 	else
-		freq = input_boost_freq_hp;
-
+		freq = input_boost_freq_prime;
 	return min(freq, policy->max);
 }
 
@@ -86,10 +93,11 @@ static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 	unsigned int freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = max_boost_freq_lp;
+		freq = max_boost_freq_little;
+	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
+		freq = max_boost_freq_big;
 	else
-		freq = max_boost_freq_hp;
-
+		freq = max_boost_freq_prime;
 	return min(freq, policy->max);
 }
 
@@ -116,7 +124,7 @@ static void __cpu_input_boost_kick(struct boost_drv *b)
 
 	set_bit(INPUT_BOOST, &b->state);
 	if (!mod_delayed_work(system_unbound_wq, &b->input_unboost,
-			      msecs_to_jiffies(input_boost_duration)))
+		      msecs_to_jiffies(input_boost_duration)))
 		wake_up(&b->boost_waitq);
 }
 

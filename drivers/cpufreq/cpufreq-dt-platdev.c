@@ -84,51 +84,6 @@ static const struct of_device_id machines[] __initconst = {
 	{ }
 };
 
-/*
- * Machines for which the cpufreq device is *not* created, mostly used for
- * platforms using "operating-points-v2" property.
- */
-static const struct of_device_id blacklist[] __initconst = {
-	{ .compatible = "calxeda,highbank", },
-	{ .compatible = "calxeda,ecx-2000", },
-
-	{ .compatible = "marvell,armadaxp", },
-
-	{ .compatible = "mediatek,mt2701", },
-	{ .compatible = "mediatek,mt2712", },
-	{ .compatible = "mediatek,mt7622", },
-	{ .compatible = "mediatek,mt7623", },
-	{ .compatible = "mediatek,mt817x", },
-	{ .compatible = "mediatek,mt8173", },
-	{ .compatible = "mediatek,mt8176", },
-	{ .compatible = "mediatek,mt8167", },
-
-	{ .compatible = "nvidia,tegra124", },
-
-	{ .compatible = "st,stih407", },
-	{ .compatible = "st,stih410", },
-
-	{ .compatible = "sigma,tango4", },
-
-	{ .compatible = "ti,am33xx", },
-	{ .compatible = "ti,am43", },
-	{ .compatible = "ti,dra7", },
-
-	{ }
-};
-
-static bool __init cpu0_node_has_opp_v2_prop(void)
-{
-	struct device_node *np = of_cpu_device_node_get(0);
-	bool ret = false;
-
-	if (of_get_property(np, "operating-points-v2", NULL))
-		ret = true;
-
-	of_node_put(np);
-	return ret;
-}
-
 static int __init cpufreq_dt_platdev_init(void)
 {
 	struct device_node *np = of_find_node_by_path("/");
