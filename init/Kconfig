@@ -108,7 +108,7 @@ config LOCALVERSION_AUTO
 	    $ git rev-parse --verify HEAD
 
 	  which is done within the script "scripts/setlocalversion".)
-
+endmenu
 config HAVE_KERNEL_GZIP
 	bool
 
@@ -1022,12 +1022,8 @@ config PELT_UTIL_HALFLIFE_8
 	  Set to 0 (default value) to disable the utilization clamping feature.
 
 	  If in doubt, use the default value.
-
-endmenu
-
 endchoice
-
-
+endmenu # FAIR Scheduler tunables"
 # For architectures that want to enable the support for NUMA-affine scheduler
 # balancing logic:
 #
@@ -2437,7 +2433,6 @@ config INIT_ALL_POSSIBLE
 	  with all 1s, and others with all 0s.  When they were centralised,
 	  it was better to provide this option than to break all the archs
 	  and have several arch maintainers pursuing me down dark alleys.
-
 source "block/Kconfig"
 
 config PREEMPT_NOTIFIERS
