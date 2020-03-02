@@ -527,6 +527,14 @@ static void get_pm_qos_info(char *p)
 	p += sprintf(p, "%-24s: %s\n",
 			"Force End Timestamp", dvfsrc->force_end);
 }
+		if (vcore_reg_id) {
+			vcore_uv = regulator_get_voltage(vcore_reg_id);
+			opp_uv = get_vcore_opp_volt(get_min_opp_for_vcore(opp));
+				if (vcore_uv < opp_uv) {
+					pr_info("DVFS FAIL= %d %d 0x%08x %08x\n",
+					vcore_uv, opp_uv,
+					dvfsrc_read(dvfsrc, DVFSRC_LEVEL),
+					spm_vcorefs_get_dvfs_opp());
 
 char *dvfsrc_dump_reg(char *ptr)
 {

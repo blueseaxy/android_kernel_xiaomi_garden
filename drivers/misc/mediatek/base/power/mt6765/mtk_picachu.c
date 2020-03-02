@@ -285,11 +285,11 @@ static void picachu_apply_efuse_to_eem(enum mt_picachu_vproc_id id,
 
 	for (i = 0; i < NR_PTP1_EFUSE_SPARE_REG; i++) {
 
-		if (!p->ptp1_efuse[i] || eem_ctrl_id[id][i] == -1)
+/*		if (!p->ptp1_efuse[i] || eem_ctrl_id[id][i] == -1)
 			continue;
 
 		eem_set_pi_efuse(eem_ctrl_id[id][i], p->ptp1_efuse[i]);
-	}
+*/	}
 }
 #else
 static void picachu_apply_efuse_to_eem(enum mt_picachu_vproc_id id,

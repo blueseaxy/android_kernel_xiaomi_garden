@@ -304,6 +304,7 @@ int snd_timer_open(struct snd_timer_instance **ti,
 			err = -EBUSY;
 			timeri = NULL;
 			goto unlock;
+                        t;
 		}
 	}
 	if (timer->num_instances >= timer->max_instances) {
