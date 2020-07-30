@@ -322,7 +322,11 @@ static void sugov_update_single(struct update_util_data *hook, u64 time,
 	unsigned int next_f;
 	bool busy;
 
-	sugov_set_iowait_boost(sg_cpu, time, flags);
+	sugov_set_iowait_boost(sg_cpu, time);
+	if (flags & SCHED_CPUFREQ_PL)
+		return;
+
+/*	sugov_set_iowait_boost(sg_cpu, time);*/
 	sg_cpu->last_update = time;
 
 	if (!sugov_should_update_freq(sg_policy, time))
@@ -403,8 +407,11 @@ static void sugov_update_shared(struct update_util_data *hook, u64 time,
 	unsigned int next_f;
 	int cid;
 
-	sugov_get_util(&util, &max, time);
 
+	if (flags & SCHED_CPUFREQ_PL)
+		return;
+
+	sugov_get_util(&util, &max, sg_cpu->cpu);
 	raw_spin_lock(&sg_policy->update_lock);
 
 	sg_cpu->util = util;
