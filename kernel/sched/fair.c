@@ -7655,7 +7655,7 @@ bias_to_waker_cpu(struct task_struct *p, int cpu, struct cpumask *rtg_target)
 {
 	bool base_test = cpumask_test_cpu(cpu, tsk_cpus_allowed(p)) &&
 			 cpu_active(cpu) && !cpu_isolated(cpu) &&
-			 task_fits_max(p, cpu) && cpu_is_in_target_set(p, cpu);
+			 task_fits_max(p, cpu);
 	bool rtg_test = rtg_target && cpumask_test_cpu(cpu, rtg_target);
 
 	return base_test && (!rtg_target || rtg_test);
