@@ -10006,6 +10006,21 @@ static struct sched_group *find_busiest_group(struct lb_env *env)
 			"%s: local=%d, busiest=%d, busiest_mask=%lu, intra=%d",
 			 __func__, local_cpu, busiest_cpu,
 			busiest_cpumask->bits[0], intra);
+		if (!sds.local || !sds.busiest)
+			goto out_balanced;
+
+		cpu_local = group_first_cpu(sds.local);
+		cpu_busiest = group_first_cpu(sds.busiest);
+
+		 /* TODO: don't assume same energy cpus are in same domain */
+		energy_local = capacity_orig_of(cpu_local);
+		energy_busiest = capacity_orig_of(cpu_busiest);
+		if (energy_local > energy_busiest) {
+			goto out_balanced;
+		} else if (energy_local == energy_busiest) {
+			if (cpu_rq(cpu_busiest)->nr_running < 2)
+				goto out_balanced;
+		}
 	}
 
 	if (energy_aware() && !system_overutilized(env->dst_cpu) && !intra)
