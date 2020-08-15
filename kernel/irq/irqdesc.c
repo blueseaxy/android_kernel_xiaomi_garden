@@ -27,9 +27,16 @@
  * lockdep: we want to handle all irq_desc locks as a single lock-class:
  */
 static struct lock_class_key irq_desc_lock_class;
-
 #ifdef CONFIG_SMP
 static int __init irq_affinity_setup(char *str)
+#if defined(CONFIG_SMP)
+static void __init init_irq_default_affinity(void)
+{
+	zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
+	cpumask_set_cpu(0, irq_default_affinity);
+}
+#else
+static void __init init_irq_default_affinity(void)
 {
 	zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
 	cpulist_parse(str, irq_default_affinity);
