@@ -779,6 +779,10 @@ KBUILD_CFLAGS += $(call cc-ifversion, -gt, 0900, \
 
 KBUILD_CFLAGS += $(call cc-ifversion, -lt, 0409, \
 			$(call cc-disable-warning,maybe-uninitialized,))
+# disable warning: tokens terminating statement expression are separated by whitespace on latest clang 12
+ifeq ($(cc-name),clang)
+KBUILD_CFLAGS	+= $(call cc-disable-warning,compound-token-split-by-space)
+endif
 
 # Tell gcc to never replace conditional load with a non-conditional one
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)
