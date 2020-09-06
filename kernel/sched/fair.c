@@ -6428,6 +6428,10 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 
 	if (capacity * capacity_margin > max_capacity * 1024)
 		return true;
+	if ((task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+		schedtune_task_boost(p) > 0) &&
+		is_min_capacity_cpu(cpu))
+		return false;
 
 	return __task_fits(p, cpu, 0);
 }
