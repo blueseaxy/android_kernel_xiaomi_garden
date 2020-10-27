@@ -33,13 +33,14 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
 			enable-method = "psci";
-			reg = <0x000>;
+    			reg = <0x000>;
 		};
 
 		cpu1: cpu@1 {
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
 			enable-method = "psci";
+                       clock-frequency = <2401000>;
 			reg = <0x001>;
 		};
 
@@ -47,6 +48,7 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
 			enable-method = "psci";
+                        clock-frequency = <2401000>;
 			reg = <0x002>;
 		};
 
@@ -54,6 +56,7 @@
 			device_type = "cpu";
 			compatible = "arm,cortex-a53";
 			enable-method = "psci";
+                        clock-frequency = <2401000>;
 			reg = <0x003>;
 		};
 

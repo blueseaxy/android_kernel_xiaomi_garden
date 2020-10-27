@@ -52,7 +52,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x000>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -62,7 +62,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x001>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -72,7 +72,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x002>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};
@@ -82,7 +82,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "arm,cortex-a53";
 			reg = <0x003>;
 			enable-method = "psci";
-			clock-frequency = <2301000000>;
+			clock-frequency = <2401000000>;
 			cpu-idle-states = <&STANDBY &MCDI_CPU &MCDI_CLUSTER>,
 					  <&SODI &SODI3 &DPIDLE &SUSPEND>;
 		};

@@ -395,19 +395,6 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -std=gnu89
 KBUILD_CPPFLAGS := -D__KERNEL__
-		   -fno-delete-null-pointer-checks \
-		   -std=gnu89 \
-		   -Wno-deprecated-declarations \
-		   -Wno-misleading-indentation \
-		   -Wno-unused-const-variable \
-		   -Wno-shift-overflow \
-		   -Wno-bool-compare \
-		   -Wno-memset-transposed-args \
-		   -Wno-discarded-array-qualifiers -std=gnu89 \
-		   -Wno-tautological-compare -Wno-array-bounds \
-		   -Wno-nonnull
-
->>>>>>> 5c1441cd9b12 (makefile: fix compilation error)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS_MODULE  := -DMODULE
@@ -667,20 +654,6 @@ LDFLAGS		+= -plugin LLVMgold.so
 LLVM_AR		:= llvm-ar
 LLVM_DIS	:= llvm-dis
 export LLVM_AR LLVM_DIS
-endif
-
-ifdef CONFIG_LTO
-LTO_CFLAGS    := -flto -flto=jobserver -ffat-lto-objects \
-                 -fuse-linker-plugin -fwhole-program
-
-KBUILD_CFLAGS += $(LTO_CFLAGS) --param=max-inline-insns-auto=1000
-LTO_LDFLAGS   := $(LTO_CFLAGS) -Wno-lto-type-mismatch -Wno-psabi \
-                 -Wno-stringop-overflow -flinker-output=nolto-rel
-LDFINAL       := $(CONFIG_SHELL) $(srctree)/scripts/gcc-ld $(LTO_LDFLAGS)
-AR            := $(CROSS_COMPILE)gcc-ar
-NM            := $(CROSS_COMPILE)gcc-nm
-DISABLE_LTO   := -fno-lto
-export DISABLE_LTO LDFINAL
 endif
 
 # The arch Makefile can set ARCH_{CPP,A,C}FLAGS to override the default
