@@ -596,6 +596,7 @@ static const struct of_device_id machines[] __initconst = {
 	{ .compatible = "mediatek,mt2712", },
 	{ }
 };
+MODULE_DEVICE_TABLE(of, mtk_cpufreq_machines);
 
 static int __init mt8173_cpufreq_driver_init(void)
 {
