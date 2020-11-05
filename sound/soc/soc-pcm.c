@@ -2157,7 +2157,6 @@ static int dpcm_fe_dai_do_trigger(struct snd_pcm_substream *substream, int cmd)
 
 	switch (trigger) {
 	case SND_SOC_DPCM_TRIGGER_PRE:
-<<<<<<< HEAD
 		/* call trigger on the frontend before the backend. */
 
 		dev_dbg(fe->dev, "ASoC: pre trigger FE %s cmd %d\n",
@@ -2167,52 +2166,17 @@ static int dpcm_fe_dai_do_trigger(struct snd_pcm_substream *substream, int cmd)
 		if (ret < 0) {
 			dev_err(fe->dev,"ASoC: trigger FE failed %d\n", ret);
 			goto out;
-=======
-		switch (cmd) {
-		case SNDRV_PCM_TRIGGER_START:
-		case SNDRV_PCM_TRIGGER_RESUME:
-		case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
-		case SNDRV_PCM_TRIGGER_DRAIN:
-			ret = dpcm_dai_trigger_fe_be(substream, cmd, true);
-			break;
-		case SNDRV_PCM_TRIGGER_STOP:
-		case SNDRV_PCM_TRIGGER_SUSPEND:
-		case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-			ret = dpcm_dai_trigger_fe_be(substream, cmd, false);
-			break;
-		default:
-			ret = -EINVAL;
-			break;
->>>>>>> 97249e6eebaa... ASoC: pcm: DRAIN support reactivation
 		}
 
 		ret = dpcm_be_dai_trigger(fe, substream->stream, cmd);
 		break;
 	case SND_SOC_DPCM_TRIGGER_POST:
-<<<<<<< HEAD
 		/* call trigger on the frontend after the backend. */
 
 		ret = dpcm_be_dai_trigger(fe, substream->stream, cmd);
 		if (ret < 0) {
 			dev_err(fe->dev,"ASoC: trigger FE failed %d\n", ret);
 			goto out;
-=======
-		switch (cmd) {
-		case SNDRV_PCM_TRIGGER_START:
-		case SNDRV_PCM_TRIGGER_RESUME:
-		case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
-		case SNDRV_PCM_TRIGGER_DRAIN:
-			ret = dpcm_dai_trigger_fe_be(substream, cmd, false);
-			break;
-		case SNDRV_PCM_TRIGGER_STOP:
-		case SNDRV_PCM_TRIGGER_SUSPEND:
-		case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
-			ret = dpcm_dai_trigger_fe_be(substream, cmd, true);
-			break;
-		default:
-			ret = -EINVAL;
-			break;
->>>>>>> 97249e6eebaa... ASoC: pcm: DRAIN support reactivation
 		}
 
 		dev_dbg(fe->dev, "ASoC: post trigger FE %s cmd %d\n",

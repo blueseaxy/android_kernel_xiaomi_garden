@@ -1131,6 +1131,201 @@ static ssize_t vfio_pci_write(void *device_data, const char __user *buf,
 	return vfio_pci_rw(device_data, (char __user *)buf, count, ppos, true);
 }
 
+/* Return 1 on zap and vma_lock acquired, 0 on contention (only with @try) */
+static int vfio_pci_zap_and_vma_lock(struct vfio_pci_device *vdev, bool try)
+{
+	struct vfio_pci_mmap_vma *mmap_vma, *tmp;
+
+	/*
+	 * Lock ordering:
+	 * vma_lock is nested under mmap_sem for vm_ops callback paths.
+	 * The memory_lock semaphore is used by both code paths calling
+	 * into this function to zap vmas and the vm_ops.fault callback
+	 * to protect the memory enable state of the device.
+	 *
+	 * When zapping vmas we need to maintain the mmap_sem => vma_lock
+	 * ordering, which requires using vma_lock to walk vma_list to
+	 * acquire an mm, then dropping vma_lock to get the mmap_sem and
+	 * reacquiring vma_lock.  This logic is derived from similar
+	 * requirements in uverbs_user_mmap_disassociate().
+	 *
+	 * mmap_sem must always be the top-level lock when it is taken.
+	 * Therefore we can only hold the memory_lock write lock when
+	 * vma_list is empty, as we'd need to take mmap_sem to clear
+	 * entries.  vma_list can only be guaranteed empty when holding
+	 * vma_lock, thus memory_lock is nested under vma_lock.
+	 *
+	 * This enables the vm_ops.fault callback to acquire vma_lock,
+	 * followed by memory_lock read lock, while already holding
+	 * mmap_sem without risk of deadlock.
+	 */
+	while (1) {
+		struct mm_struct *mm = NULL;
+
+		if (try) {
+			if (!mutex_trylock(&vdev->vma_lock))
+				return 0;
+		} else {
+			mutex_lock(&vdev->vma_lock);
+		}
+		while (!list_empty(&vdev->vma_list)) {
+			mmap_vma = list_first_entry(&vdev->vma_list,
+						    struct vfio_pci_mmap_vma,
+						    vma_next);
+			mm = mmap_vma->vma->vm_mm;
+			if (mmget_not_zero(mm))
+				break;
+
+			list_del(&mmap_vma->vma_next);
+			kfree(mmap_vma);
+			mm = NULL;
+		}
+		if (!mm)
+			return 1;
+		mutex_unlock(&vdev->vma_lock);
+
+		if (try) {
+			if (!down_read_trylock(&mm->mmap_sem)) {
+				mmput(mm);
+				return 0;
+			}
+		} else {
+			down_read(&mm->mmap_sem);
+		}
+		if (mmget_still_valid(mm)) {
+			if (try) {
+				if (!mutex_trylock(&vdev->vma_lock)) {
+					up_read(&mm->mmap_sem);
+					mmput(mm);
+					return 0;
+				}
+			} else {
+				mutex_lock(&vdev->vma_lock);
+			}
+			list_for_each_entry_safe(mmap_vma, tmp,
+						 &vdev->vma_list, vma_next) {
+				struct vm_area_struct *vma = mmap_vma->vma;
+
+				if (vma->vm_mm != mm)
+					continue;
+
+				list_del(&mmap_vma->vma_next);
+				kfree(mmap_vma);
+
+				zap_vma_ptes(vma, vma->vm_start,
+					     vma->vm_end - vma->vm_start);
+			}
+			mutex_unlock(&vdev->vma_lock);
+		}
+		up_read(&mm->mmap_sem);
+		mmput(mm);
+	}
+}
+
+void vfio_pci_zap_and_down_write_memory_lock(struct vfio_pci_device *vdev)
+{
+	vfio_pci_zap_and_vma_lock(vdev, false);
+	down_write(&vdev->memory_lock);
+	mutex_unlock(&vdev->vma_lock);
+}
+
+u16 vfio_pci_memory_lock_and_enable(struct vfio_pci_device *vdev)
+{
+	u16 cmd;
+
+	down_write(&vdev->memory_lock);
+	pci_read_config_word(vdev->pdev, PCI_COMMAND, &cmd);
+	if (!(cmd & PCI_COMMAND_MEMORY))
+		pci_write_config_word(vdev->pdev, PCI_COMMAND,
+				      cmd | PCI_COMMAND_MEMORY);
+
+	return cmd;
+}
+
+void vfio_pci_memory_unlock_and_restore(struct vfio_pci_device *vdev, u16 cmd)
+{
+	pci_write_config_word(vdev->pdev, PCI_COMMAND, cmd);
+	up_write(&vdev->memory_lock);
+}
+
+/* Caller holds vma_lock */
+static int __vfio_pci_add_vma(struct vfio_pci_device *vdev,
+			      struct vm_area_struct *vma)
+{
+	struct vfio_pci_mmap_vma *mmap_vma;
+
+	mmap_vma = kmalloc(sizeof(*mmap_vma), GFP_KERNEL);
+	if (!mmap_vma)
+		return -ENOMEM;
+
+	mmap_vma->vma = vma;
+	list_add(&mmap_vma->vma_next, &vdev->vma_list);
+
+	return 0;
+}
+
+/*
+ * Zap mmaps on open so that we can fault them in on access and therefore
+ * our vma_list only tracks mappings accessed since last zap.
+ */
+static void vfio_pci_mmap_open(struct vm_area_struct *vma)
+{
+	zap_vma_ptes(vma, vma->vm_start, vma->vm_end - vma->vm_start);
+}
+
+static void vfio_pci_mmap_close(struct vm_area_struct *vma)
+{
+	struct vfio_pci_device *vdev = vma->vm_private_data;
+	struct vfio_pci_mmap_vma *mmap_vma;
+
+	mutex_lock(&vdev->vma_lock);
+	list_for_each_entry(mmap_vma, &vdev->vma_list, vma_next) {
+		if (mmap_vma->vma == vma) {
+			list_del(&mmap_vma->vma_next);
+			kfree(mmap_vma);
+			break;
+		}
+	}
+	mutex_unlock(&vdev->vma_lock);
+}
+
+static int vfio_pci_mmap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+{
+	struct vfio_pci_device *vdev = vma->vm_private_data;
+	int ret = VM_FAULT_NOPAGE;
+
+	mutex_lock(&vdev->vma_lock);
+	down_read(&vdev->memory_lock);
+
+	if (!__vfio_pci_memory_enabled(vdev)) {
+		ret = VM_FAULT_SIGBUS;
+		mutex_unlock(&vdev->vma_lock);
+		goto up_out;
+	}
+
+	if (__vfio_pci_add_vma(vdev, vma)) {
+		ret = VM_FAULT_OOM;
+		mutex_unlock(&vdev->vma_lock);
+		goto up_out;
+	}
+
+	mutex_unlock(&vdev->vma_lock);
+
+	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+			       vma->vm_end - vma->vm_start, vma->vm_page_prot))
+		ret = VM_FAULT_SIGBUS;
+
+up_out:
+	up_read(&vdev->memory_lock);
+	return ret;
+}
+
+static const struct vm_operations_struct vfio_pci_mmap_ops = {
+	.open = vfio_pci_mmap_open,
+	.close = vfio_pci_mmap_close,
+	.fault = vfio_pci_mmap_fault,
+};
+
 static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
 {
 	struct vfio_pci_device *vdev = device_data;
