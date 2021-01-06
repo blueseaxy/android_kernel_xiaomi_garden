@@ -1838,6 +1838,13 @@ static inline void android_device_destroy(void)
 {
 }
 #endif
+	.max_speed	= USB_SPEED_SUPER_PLUS,
+	.driver = {
+		.owner          = THIS_MODULE,
+		.name		= "configfs-gadget",
+	},
+	.match_existing_only = 1,
+};
 
 static struct config_group *gadgets_make(
 		struct config_group *group,
@@ -1871,7 +1878,7 @@ static struct config_group *gadgets_make(
 	gi->composite.unbind = configfs_do_nothing;
 	gi->composite.suspend = NULL;
 	gi->composite.resume = NULL;
-	gi->composite.max_speed = USB_SPEED_SUPER;
+	gi->composite.max_speed = USB_SPEED_SUPER_PLUS;
 
 	mutex_init(&gi->lock);
 	spin_lock_init(&gi->spinlock);
