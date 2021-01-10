@@ -199,6 +199,13 @@ struct irq_data {
  * IRQD_WAKEUP_ARMED		- Wakeup mode armed
  * IRQD_FORWARDED_TO_VCPU	- The interrupt is forwarded to a VCPU
  * IRQD_AFFINITY_MANAGED	- Affinity is auto-managed by the kernel
+ * IRQD_IRQ_STARTED		- Startup state of the interrupt
+ * IRQD_MANAGED_SHUTDOWN	- Interrupt was shutdown due to empty affinity
+ *				  mask. Applies only to affinity managed irqs.
+ * IRQD_SINGLE_TARGET		- IRQ allows only a single affinity target
+ * IRQD_DEFAULT_TRIGGER_SET	- Expected trigger already been set
+ *				  irq_chip::irq_set_affinity() when deactivated.
+ * IRQD_PERF_CRITICAL		- IRQ is performance-critical
  */
 enum {
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -216,6 +223,11 @@ enum {
 	IRQD_WAKEUP_ARMED		= (1 << 19),
 	IRQD_FORWARDED_TO_VCPU		= (1 << 20),
 	IRQD_AFFINITY_MANAGED		= (1 << 21),
+	IRQD_IRQ_STARTED		= (1 << 22),
+	IRQD_MANAGED_SHUTDOWN		= (1 << 23),
+	IRQD_SINGLE_TARGET		= (1 << 24),
+	IRQD_DEFAULT_TRIGGER_SET	= (1 << 25),
+	IRQD_PERF_CRITICAL		= (1 << 26),
 };
 
 #define __irqd_to_state(d) ACCESS_PRIVATE((d)->common, state_use_accessors)
