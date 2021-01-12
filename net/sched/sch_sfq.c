@@ -608,6 +608,7 @@ static void sfq_perturbation(unsigned long arg)
 	struct sfq_sched_data *q = qdisc_priv(sch);
 	spinlock_t *root_lock = qdisc_lock(qdisc_root_sleeping(sch));
 	siphash_key_t nkey;
+ 
 	get_random_bytes(&nkey, sizeof(nkey));
 	spin_lock(root_lock);
 	q->perturbation = nkey;
@@ -635,7 +636,7 @@ static int sfq_change(struct Qdisc *sch, struct nlattr *opt)
 	    (!is_power_of_2(ctl->divisor) || ctl->divisor > 65536))
 		return -EINVAL;
 	if (ctl_v1 && !red_check_params(ctl_v1->qth_min, ctl_v1->qth_max,
-					ctl_v1->Wlog, ctl_v1->Scell_log))
+					ctl_v1->Wlog))
 		return -EINVAL;
 	if (ctl_v1 && ctl_v1->qth_min) {
 		p = kmalloc(sizeof(*p), GFP_KERNEL);

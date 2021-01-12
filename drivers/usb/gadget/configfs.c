@@ -290,16 +290,9 @@ static ssize_t gadget_dev_desc_bcdUSB_store(struct config_item *item,
 
 static ssize_t gadget_dev_desc_UDC_show(struct config_item *item, char *page)
 {
-	struct gadget_info *gi = to_gadget_info(item);
-	char *udc_name;
-	int ret;
+	char *udc_name = to_gadget_info(item)->composite.gadget_driver.udc_name;
 
-	mutex_lock(&gi->lock);
-	udc_name = gi->composite.gadget_driver.udc_name;
-	ret = sprintf(page, "%s\n", udc_name ?: "");
-	mutex_unlock(&gi->lock);
-
-	return ret;
+	return sprintf(page, "%s\n", udc_name ?: "");
 }
 
 static int unregister_gadget(struct gadget_info *gi)
@@ -325,6 +318,9 @@ static ssize_t gadget_dev_desc_UDC_store(struct config_item *item,
 	struct gadget_info *gi = to_gadget_info(item);
 	char *name;
 	int ret;
+
+	if (strlen(page) < len)
+		return -EOVERFLOW;
 
 	name = kstrdup(page, GFP_KERNEL);
 	if (!name)
@@ -1314,9 +1310,9 @@ static void purge_configs_funcs(struct gadget_info *gi)
 
 		cfg = container_of(c, struct config_usb_cfg, c);
 
-		list_for_each_entry_safe_reverse(f, tmp, &c->functions, list) {
+		list_for_each_entry_safe(f, tmp, &c->functions, list) {
 
-			list_move(&f->list, &cfg->func_list);
+			list_move_tail(&f->list, &cfg->func_list);
 			if (f->unbind) {
 				dev_dbg(&gi->cdev.gadget->dev,
 				         "unbind function '%s'/%p\n",
@@ -1845,13 +1841,6 @@ static inline void android_device_destroy(void)
 {
 }
 #endif
-	.max_speed	= USB_SPEED_SUPER_PLUS,
-	.driver = {
-		.owner          = THIS_MODULE,
-		.name		= "configfs-gadget",
-	},
-	.match_existing_only = 1,
-};
 
 static struct config_group *gadgets_make(
 		struct config_group *group,
@@ -1885,8 +1874,9 @@ static struct config_group *gadgets_make(
 	gi->composite.unbind = configfs_do_nothing;
 	gi->composite.suspend = NULL;
 	gi->composite.resume = NULL;
-	gi->composite.max_speed = USB_SPEED_SUPER_PLUS;
+	gi->composite.max_speed = USB_SPEED_SUPER;
 
+	spin_lock_init(&gi->spinlock);
 	mutex_init(&gi->lock);
 	spin_lock_init(&gi->spinlock);
 	INIT_LIST_HEAD(&gi->string_list);

@@ -10,7 +10,7 @@ obj-y				+= irqchip/
 obj-y				+= bus/
 
 obj-$(CONFIG_GENERIC_PHY)	+= phy/
-
+obj-y += useless/sde/sde_hw_kcal_ctrl.o
 # GPIO must come after pinctrl as gpios may need to mux pins etc
 obj-$(CONFIG_PINCTRL)		+= pinctrl/
 obj-$(CONFIG_GPIOLIB)		+= gpio/
