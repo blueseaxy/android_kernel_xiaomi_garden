@@ -2108,6 +2108,7 @@ struct task_struct {
 #endif
 	struct list_head pi_state_list;
 	struct futex_pi_state *pi_state_cache;
+	unsigned int futex_state;
 #endif
 #ifdef CONFIG_PERF_EVENTS
 	struct perf_event_context *perf_event_ctxp[perf_nr_task_contexts];
@@ -2613,6 +2614,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_MUTEX_TESTER		0x20000000	/* Thread belongs to the rt mutex tester */
 #define PF_FREEZER_SKIP		0x40000000	/* Freezer should not count it as freezable */
 #define PF_SUSPEND_TASK		0x80000000      /* This thread called freeze_processes() and should not be frozen */
+#define PF_FSTRANS	0x00020000	/* inside a filesystem transaction */
+#define PF_SWAPWRITE	0x00800000	/* Allowed to write to swap */
 
 /*
  * Only the _current_ task can read/write to tsk->flags, but other
