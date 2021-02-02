@@ -1101,6 +1101,7 @@ static int alloc_iommu(struct dmar_drhd_unit *drhd)
 	}
 
 	drhd->iommu = iommu;
+	iommu->drhd = drhd;
 
 	return 0;
 
@@ -1115,7 +1116,7 @@ error:
 
 static void free_iommu(struct intel_iommu *iommu)
 {
-	if (intel_iommu_enabled && iommu->iommu_dev)
+	if (intel_iommu_enabled && !iommu->drhd->ignored)
 		iommu_device_destroy(iommu->iommu_dev);
 
 	if (iommu->irq) {
