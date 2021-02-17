@@ -694,9 +694,42 @@ static int smp_add_present_cpu(int cpu);
 static int __smp_rescan_cpus(struct sclp_core_info *info, int sysfs_add)
 {
 	struct pcpu *pcpu;
-	cpumask_t avail;
-	int cpu, nr, i, j;
+	int cpu, nr, i;
 	u16 address;
+
+	nr = 0;
+	if (sclp.has_core_type && core->type != boot_core_type)
+		return nr;
+	cpu = cpumask_first(avail);
+	address = core->core_id << smp_cpu_mt_shift;
+	for (i = 0; (i <= smp_cpu_mtid) && (cpu < nr_cpu_ids); i++) {
+		if (pcpu_find_address(cpu_present_mask, address + i))
+			continue;
+		pcpu = pcpu_devices + cpu;
+		pcpu->address = address + i;
+		if (configured)
+			pcpu->state = CPU_STATE_CONFIGURED;
+		else
+			pcpu->state = CPU_STATE_STANDBY;
+		smp_cpu_set_polarization(cpu, POLARIZATION_UNKNOWN);
+		set_cpu_present(cpu, true);
+		if (!early && smp_add_present_cpu(cpu) != 0)
+			set_cpu_present(cpu, false);
+		else
+			nr++;
+		cpumask_clear_cpu(cpu, avail);
+		cpu = cpumask_next(cpu, avail);
+	}
+	return nr;
+}
+
+static int __smp_rescan_cpus(struct sclp_core_info *info, bool early)
+{
+	struct sclp_core_entry *core;
+	static cpumask_t avail;
+	bool configured;
+	u16 core_id;
+	int nr, i;
 
 	nr = 0;
 	cpumask_xor(&avail, cpu_possible_mask, cpu_present_mask);
