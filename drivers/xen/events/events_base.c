@@ -661,6 +661,12 @@ static void xen_evtchn_close(unsigned int port)
 		BUG();
 }
 
+static void event_handler_exit(struct irq_info *info)
+{
+	smp_store_release(&info->is_active, 0);
+	clear_evtchn(info->evtchn);
+}
+
 static void pirq_query_unmask(int irq)
 {
 	struct physdev_irq_status_query irq_status;
@@ -691,13 +697,13 @@ static void eoi_pirq(struct irq_data *data)
 	    likely(!irqd_irq_disabled(data))) {
 		do_mask(info, EVT_MASK_REASON_TEMPORARY);
 
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 
 		irq_move_masked_irq(data);
 
 		do_unmask(info, EVT_MASK_REASON_TEMPORARY);
 	} else
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 
 	if (pirq_needs_eoi(data->irq)) {
 		rc = HYPERVISOR_physdev_op(PHYSDEVOP_eoi, &eoi);
@@ -1421,6 +1427,56 @@ void xen_send_IPI_one(unsigned int cpu, enum ipi_vector vector)
 	notify_remote_via_irq(irq);
 }
 
+struct evtchn_loop_ctrl {
+	ktime_t timeout;
+	unsigned count;
+	bool defer_eoi;
+};
+
+void handle_irq_for_port(evtchn_port_t port, struct evtchn_loop_ctrl *ctrl)
+{
+	int irq;
+	struct irq_info *info;
+
+	irq = get_evtchn_to_irq(port);
+	if (irq == -1)
+		return;
+
+	/*
+	 * Check for timeout every 256 events.
+	 * We are setting the timeout value only after the first 256
+	 * events in order to not hurt the common case of few loop
+	 * iterations. The 256 is basically an arbitrary value.
+	 *
+	 * In case we are hitting the timeout we need to defer all further
+	 * EOIs in order to ensure to leave the event handling loop rather
+	 * sooner than later.
+	 */
+	if (!ctrl->defer_eoi && !(++ctrl->count & 0xff)) {
+		ktime_t kt = ktime_get();
+
+		if (!ctrl->timeout.tv64) {
+			kt = ktime_add_ms(kt,
+					  jiffies_to_msecs(event_loop_timeout));
+			ctrl->timeout = kt;
+		} else if (kt.tv64 > ctrl->timeout.tv64) {
+			ctrl->defer_eoi = true;
+		}
+	}
+
+	info = info_for_irq(irq);
+	if (xchg_acquire(&info->is_active, 1))
+		return;
+
+	if (ctrl->defer_eoi) {
+		info->eoi_cpu = smp_processor_id();
+		info->irq_epoch = __this_cpu_read(irq_epoch);
+		info->eoi_time = get_jiffies_64() + event_eoi_delay;
+	}
+
+	generic_handle_irq(irq);
+}
+
 static DEFINE_PER_CPU(unsigned, xed_nesting_count);
 
 static void __xen_evtchn_do_upcall(void)
@@ -1576,13 +1632,13 @@ static void ack_dynirq(struct irq_data *data)
 	    likely(!irqd_irq_disabled(data))) {
 		do_mask(info, EVT_MASK_REASON_TEMPORARY);
 
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 
 		irq_move_masked_irq(data);
 
 		do_unmask(info, EVT_MASK_REASON_TEMPORARY);
 	} else
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 }
 
 static void mask_ack_dynirq(struct irq_data *data)
@@ -1598,7 +1654,7 @@ static void lateeoi_ack_dynirq(struct irq_data *data)
 
 	if (VALID_EVTCHN(evtchn)) {
 		do_mask(info, EVT_MASK_REASON_EOI_PENDING);
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 	}
 }
 
@@ -1609,7 +1665,7 @@ static void lateeoi_mask_ack_dynirq(struct irq_data *data)
 
 	if (VALID_EVTCHN(evtchn)) {
 		do_mask(info, EVT_MASK_REASON_EXPLICIT);
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 	}
 }
 
@@ -1718,10 +1774,11 @@ static void restore_cpu_ipis(unsigned int cpu)
 /* Clear an irq's pending state, in preparation for polling on it */
 void xen_clear_irq_pending(int irq)
 {
-	int evtchn = evtchn_from_irq(irq);
+	struct irq_info *info = info_for_irq(irq);
+	evtchn_port_t evtchn = info ? info->evtchn : 0;
 
 	if (VALID_EVTCHN(evtchn))
-		clear_evtchn(evtchn);
+		event_handler_exit(info);
 }
 EXPORT_SYMBOL(xen_clear_irq_pending);
 void xen_set_irq_pending(int irq)
