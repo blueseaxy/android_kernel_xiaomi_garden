@@ -64,8 +64,6 @@
  *                their interrupt handlers.
  * IRQF_PERF_AFFINE - Interrupt is critical to the overall performance of the
  *		      system and should be processed on a big CPU.
- * IRQF_PRIME_AFFINE - Interrupt is critical to the overall performance of the
- *		       system and should be processed on a prime CPU.
  */
 #define IRQF_SHARED		0x00000080
 #define IRQF_PROBE_SHARED	0x00000100
