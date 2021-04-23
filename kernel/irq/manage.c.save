@@ -1134,7 +1134,6 @@ setup_irq_thread(struct irqaction *new, unsigned int irq, bool secondary)
 	return 0;
 }
 
-
 static void add_desc_to_perf_list(struct irq_desc *desc, unsigned int perf_flag)
 {
 	struct irq_desc_list *item;
@@ -1267,7 +1266,7 @@ void reaffine_perf_irqs(bool from_hotplug)
 	raw_spin_unlock_irqrestore(&perf_irqs_lock, flags);
 }
 
-/*
+>>>>>>> ace5b10f7e6d (kernel: irq: Switch to bi-cluster API fo/*
  * Internal function to register an irqaction - typically used to
  * allocate special interrupts that are part of the architecture.
  */
@@ -1495,8 +1494,10 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
 		}
 
+<<<<<<< HEAD
 		/* Set default affinity mask once everything is setup */
 		setup_affinity(desc, mask);
+=======
 		if (new->flags & (IRQF_PERF_AFFINE)) {
 			affine_one_perf_thread(new);
 			irqd_set(&desc->irq_data, IRQD_PERF_CRITICAL);
@@ -1516,6 +1517,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			/* Undo nested disables: */
 			desc->depth = 1;
 		}
+>>>>>>> ace5b10f7e6d (kernel: irq: Switch to bi-cluster API for marking IRQ threads as critical)
 
 	} else if (new->flags & IRQF_TRIGGER_MASK) {
 		unsigned int nmsk = new->flags & IRQF_TRIGGER_MASK;

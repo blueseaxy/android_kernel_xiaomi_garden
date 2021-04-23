@@ -26,32 +26,32 @@
 /**************************************************
  * MT6762 segment_2 : GPU DVFS OPP table Setting
  **************************************************/
-#define SEG2_GPU_DVFS_FREQ0			(1000000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ1			(980000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ2			(910000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ0			(650000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ1			(500000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ2			(400000)/* KHz */
 
-#define SEG2_GPU_DVFS_VOLT0			(100000)	/* mV x 100 */
-#define SEG2_GPU_DVFS_VOLT1			(100000)	/* mV x 100 */
-#define SEG2_GPU_DVFS_VOLT2			(100000)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VOLT0			(80000)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VOLT1			(70000)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VOLT2			(65000)	/* mV x 100 */
 
-#define SEG2_GPU_DVFS_VSRAM0			(100500)	/* mV x 100 */
-#define SEG2_GPU_DVFS_VSRAM1			(100500)	/* mV x 100 */
-#define SEG2_GPU_DVFS_VSRAM2			(100500)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VSRAM0			(87500)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VSRAM1			(87500)	/* mV x 100 */
+#define SEG2_GPU_DVFS_VSRAM2			(87500)	/* mV x 100 */
 
 /**************************************************
  * MT6765 segment_3 : GPU DVFS OPP table Setting
  **************************************************/
-#define SEG3_GPU_DVFS_FREQ0			(1000000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ1			(980000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ2			(910000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ0			(680000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ1			(500000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ2			(400000)	/* KHz */
 
-#define SEG3_GPU_DVFS_VOLT0			(100000)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VOLT1			(100000)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VOLT2			(100000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT0			(80000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT1			(70000)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VOLT2			(65000)		/* mV x 100 */
 
-#define SEG3_GPU_DVFS_VSRAM0			(100500)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VSRAM1			(100500)		/* mV x 100 */
-#define SEG3_GPU_DVFS_VSRAM2			(100500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM0			(87500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM1			(87500)		/* mV x 100 */
+#define SEG3_GPU_DVFS_VSRAM2			(87500)		/* mV x 100 */
 
 /**************************************************
  * MT6765T segment_4 : GPU DVFS OPP table Setting
@@ -64,9 +64,9 @@
 #define SEG4_GPU_DVFS_VOLT1			(70000)		/* mV x 100 */
 #define SEG4_GPU_DVFS_VOLT2			(65000)		/* mV x 100 */
 
-#define SEG4_GPU_DVFS_VSRAM0			(97500)		/* mV x 100 */
-#define SEG4_GPU_DVFS_VSRAM1			(97500)		/* mV x 100 */
-#define SEG4_GPU_DVFS_VSRAM2			(97500)		/* mV x 100 */
+#define SEG4_GPU_DVFS_VSRAM0			(87500)		/* mV x 100 */
+#define SEG4_GPU_DVFS_VSRAM1			(87500)		/* mV x 100 */
+#define SEG4_GPU_DVFS_VSRAM2			(87500)		/* mV x 100 */
 
 /**************************************************
  * MT6762D segment_5 : GPU DVFS OPP table Setting
@@ -88,7 +88,7 @@
  **************************************************/
 #define VGPU_MAX_VOLT				(SEG3_GPU_DVFS_VOLT0)
 #define VSRAM_GPU_MAX_VOLT			(SEG3_GPU_DVFS_VSRAM0)
-#define DELAY_FACTOR				(695)
+#define DELAY_FACTOR				(625)
 #define PMIC_SRCLKEN_HIGH_TIME_US		(1000)	/* spec is 1(ms) */
 #define BUCK_VARIATION_MAX			(25000)	/* mV x 100 */
 #define BUCK_VARIATION_MIN			(10000)	/* mV x 100 */
@@ -105,11 +105,11 @@
  * Clock Setting
  **************************************************/
 #define POST_DIV_2_MAX_FREQ			(1900000)
-#define POST_DIV_2_MIN_FREQ			(1700000)
-#define POST_DIV_4_MAX_FREQ			(1300000)
-#define POST_DIV_4_MIN_FREQ			(1095000)
-#define POST_DIV_8_MAX_FREQ			(1015000)
-#define POST_DIV_8_MIN_FREQ			(177500)
+#define POST_DIV_2_MIN_FREQ			(750000)
+#define POST_DIV_4_MAX_FREQ			(950000)
+#define POST_DIV_4_MIN_FREQ			(375000)
+#define POST_DIV_8_MAX_FREQ			(475000)
+#define POST_DIV_8_MIN_FREQ			(187500)
 #define POST_DIV_16_MAX_FREQ			(237500)
 #define POST_DIV_16_MIN_FREQ			(93750)
 #define POST_DIV_MASK				(0x70000000)
@@ -125,10 +125,10 @@
 /**************************************************
  * Reference Power Setting
  **************************************************/
-#define GPU_ACT_REF_POWER			(90085)		/* mW  */
+#define GPU_ACT_REF_POWER			(1285)		/* mW  */
 #define GPU_ACT_REF_FREQ			(900000)	/* KHz */
 #define GPU_ACT_REF_VOLT			(90000)		/* mV x 100 */
-#define GPU_DVFS_PTPOD_DISABLE_VOLT		(75000)		/* mV x 100 */
+#define GPU_DVFS_PTPOD_DISABLE_VOLT		(65000)		/* mV x 100 */
 
 /**************************************************
  * Log Setting
