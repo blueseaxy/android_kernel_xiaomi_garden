@@ -741,3 +741,61 @@ config ARCH_USES_HIGH_VMA_FLAGS
 	bool
 config ARCH_HAS_PKEYS
 	bool
+
+config FORCE_ALLOC_FROM_DMA_ZONE
+	bool "Force certain memory allocators to always return ZONE_DMA memory"
+	depends on ZONE_DMA
+	help
+	  Ensure certain memory allocators always return memory from ZONE_DMA.
+	  This option helps ensure that clients who require ZONE_DMA memory are
+	  always using ZONE_DMA memory.
+
+	  If unsure, say "n".
+
+config PROCESS_RECLAIM
+	bool "Enable process reclaim"
+	depends on PROC_FS
+	default n
+	help
+	 It allows to reclaim pages of the process by /proc/pid/reclaim.
+
+	 (echo file > /proc/PID/reclaim) reclaims file-backed pages only.
+	 (echo anon > /proc/PID/reclaim) reclaims anonymous pages only.
+	 (echo all > /proc/PID/reclaim) reclaims all pages.
+
+	 (echo addr size-byte > /proc/PID/reclaim) reclaims pages in
+	 (addr, addr + size-bytes) of the process.
+
+	 Any other vaule is ignored.
+
+config PRLMK
+	bool "Enable PRLMK"
+	depends on TASK_XACCT && ZRAM
+	depends on !PSI && !MEMCG
+	depends on !PROCESS_RECLAIM && !ANDROID_LOW_MEMORY_KILLER && !ANDROID_SIMPLE_LMK
+	default n
+	help
+	  PRLMK is a custom low-memory-killer for Android, based on the process reclaim driver.
+
+config ARCH_SUPPORTS_SPECULATIVE_PAGE_FAULT
+       def_bool n
+
+config SPECULATIVE_PAGE_FAULT
+       bool "Speculative page faults"
+       default y
+       depends on ARCH_SUPPORTS_SPECULATIVE_PAGE_FAULT
+       depends on MMU && SMP
+       help
+         Try to handle user space page faults without holding the mmap_sem.
+
+	 This should allow better concurrency for massively threaded process
+	 since the page fault handler will not wait for other threads memory
+	 layout change to be done, assuming that this change is done in another
+	 part of the process's memory space. This type of page fault is named
+	 speculative page fault.
+
+	 If the speculative page fault fails because of a concurrency is
+	 detected or because underlying PMD or PTE tables are not yet
+	 allocating, it is failing its processing and a classic page fault
+	 is then tried.
+

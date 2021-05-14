@@ -1626,6 +1626,7 @@ const struct file_operations proc_pagemap_operations = {
 };
 #endif /* CONFIG_PROC_PAGE_MONITOR */
 
+
 #ifdef CONFIG_PROCESS_RECLAIM
 enum reclaim_type {
 	RECLAIM_FILE,
@@ -1684,6 +1685,7 @@ static int deactivate_pte_range(pmd_t *pmd, unsigned long addr,
 }
 
 
+#if defined(CONFIG_PROCESS_RECLAIM) || defined(CONFIG_PRLMK)
 static int reclaim_pte_range(pmd_t *pmd, unsigned long addr,
 				unsigned long end, struct mm_walk *walk)
 {

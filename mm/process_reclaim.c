@@ -35,11 +35,9 @@
 static void swap_fn(struct work_struct *work);
 DECLARE_WORK(swap_work, swap_fn);
 
-#ifndef CONFIG_ANDROID_PR_KILL
 /* User knob to enable/disable process reclaim feature */
 static int enable_process_reclaim;
 module_param_named(enable_process_reclaim, enable_process_reclaim, int, 0644);
-#endif
 
 /* The max number of pages tried to be reclaimed in a single run */
 int per_swap_size = SWAP_CLUSTER_MAX * 32;
@@ -88,7 +86,6 @@ module_param_named(free_swap_limit, free_swap_limit, int, 0644);
 static short score_kill_limit = 300;
 module_param_named(score_kill_limit, score_kill_limit, short, 0644);
 #endif
-
 static atomic_t skip_reclaim = ATOMIC_INIT(0);
 /* Not atomic since only a single instance of swap_fn run at a time */
 static int monitor_eff;
@@ -382,7 +379,6 @@ static int vmpressure_notifier(struct notifier_block *nb,
 {
 	unsigned long pressure = action;
 
-#ifndef CONFIG_ANDROID_PR_KILL
 	if (!enable_process_reclaim)
 		return 0;
 #endif
@@ -443,5 +439,3 @@ static void __exit process_reclaim_exit(void)
 
 module_init(process_reclaim_init);
 module_exit(process_reclaim_exit);
-
-#endif
