@@ -1683,7 +1683,7 @@ static int deactivate_pte_range(pmd_t *pmd, unsigned long addr,
 	cond_resched();
 	return 0;
 }
-
+#endif
 
 #if defined(CONFIG_PROCESS_RECLAIM) || defined(CONFIG_PRLMK)
 static int reclaim_pte_range(pmd_t *pmd, unsigned long addr,

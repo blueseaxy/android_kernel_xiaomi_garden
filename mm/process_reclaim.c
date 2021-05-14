@@ -21,11 +21,6 @@
 #include <linux/notifier.h>
 #include <linux/vmpressure.h>
 
-#ifdef CONFIG_ANDROID_PR_KILL
-#include <linux/delay.h>
-#endif
-
-#ifndef CONFIG_ANDROID_PR_KILL
 #define CREATE_TRACE_POINTS
 #include <trace/events/process_reclaim.h>
 #endif
@@ -381,7 +376,6 @@ static int vmpressure_notifier(struct notifier_block *nb,
 
 	if (!enable_process_reclaim)
 		return 0;
-#endif
 
 	if (!current_is_kswapd())
 		return 0;
