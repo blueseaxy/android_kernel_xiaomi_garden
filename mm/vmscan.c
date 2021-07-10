@@ -1333,9 +1333,8 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 	return ret;
 }
 
-#if defined(CONFIG_PROCESS_RECLAIM) || defined(CONFIG_PRLMK)
-unsigned long reclaim_pages_from_list(struct list_head *page_list,
-					struct vm_area_struct *vma)
+#ifdef CONFIG_PROCESS_RECLAIM
+unsigned long reclaim_pages(struct list_head *page_list)
 {
 	unsigned long dummy1, dummy2, dummy3, dummy4, dummy5;
 	unsigned long nr_reclaimed;
@@ -3117,8 +3116,8 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
 	unsigned long nr_reclaimed;
 	struct scan_control sc = {
 		.nr_to_reclaim = SWAP_CLUSTER_MAX,
-/*		.gfp_mask = memalloc_noio_flags(gfp_mask),
-*/		.reclaim_idx = gfp_zone(gfp_mask),
+		.gfp_mask = memalloc_noio_flags(gfp_mask),
+		.reclaim_idx = gfp_zone(gfp_mask),
 		.order = order,
 		.nodemask = nodemask,
 		.priority = DEF_PRIORITY,
