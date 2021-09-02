@@ -592,11 +592,7 @@ static int snd_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	if (pm_qos_request_active(&substream->latency_pm_qos_req))
 		pm_qos_remove_request(&substream->latency_pm_qos_req);
-	if ((usecs = period_to_usecs(runtime)) >= 0) {
-		substream->latency_pm_qos_req.type = PM_QOS_REQ_AFFINE_CORES;
-
-		atomic_set(&substream->latency_pm_qos_req.cpus_affine, BIT(4));
-
+	if ((usecs = period_to_usecs(runtime)) >= 0)
 		pm_qos_add_request(&substream->latency_pm_qos_req,
 				   PM_QOS_CPU_DMA_LATENCY, usecs);
 	return 0;

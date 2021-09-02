@@ -199,37 +199,6 @@ int irq_startup(struct irq_desc *desc, bool resend)
 	} else {
 		irq_enable(desc);
 	}
-	irq_state_set_started(desc);
-	return ret;
-}
-
-int irq_startup(struct irq_desc *desc, bool resend, bool force)
-{
-	struct irq_data *d = irq_desc_get_irq_data(desc);
-	struct cpumask *aff = irq_data_get_affinity_mask(d);
-	int ret = 0;
-
-	desc->depth = 0;
-
-	if (irqd_is_started(d)) {
-		irq_enable(desc);
-	} else {
-		switch (__irq_startup_managed(desc, aff, force)) {
-		case IRQ_STARTUP_NORMAL:
-			ret = __irq_startup(desc);
-			if (irqd_has_set(&desc->irq_data, IRQD_PERF_CRITICAL))
-				setup_perf_irq_locked(desc, desc->action->flags);
-			else
-				irq_setup_affinity(desc);
-			break;
-		case IRQ_STARTUP_MANAGED:
-			irq_do_set_affinity(d, aff, false);
-			ret = __irq_startup(desc);
-			break;
-		case IRQ_STARTUP_ABORT:
-			return 0;
-		}
-	}
 	if (resend)
 		check_irq_resend(desc);
 	return ret;

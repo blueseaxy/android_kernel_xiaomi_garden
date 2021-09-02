@@ -26,9 +26,9 @@
 /**************************************************
  * MT6762 segment_2 : GPU DVFS OPP table Setting
  **************************************************/
-#define SEG2_GPU_DVFS_FREQ0			(947000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ1			(930000)/* KHz */
-#define SEG2_GPU_DVFS_FREQ2			(910000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ0			(1000000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ1			(980000)/* KHz */
+#define SEG2_GPU_DVFS_FREQ2			(960000)/* KHz */
 
 #define SEG2_GPU_DVFS_VOLT0			(100000)	/* mV x 100 */
 #define SEG2_GPU_DVFS_VOLT1			(100000)	/* mV x 100 */
@@ -42,8 +42,8 @@
  * MT6765 segment_3 : GPU DVFS OPP table Setting
  **************************************************/
 #define SEG3_GPU_DVFS_FREQ0			(1000000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ1			(930000)	/* KHz */
-#define SEG3_GPU_DVFS_FREQ2			(900000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ1			(980000)	/* KHz */
+#define SEG3_GPU_DVFS_FREQ2			(960000)	/* KHz */
 
 #define SEG3_GPU_DVFS_VOLT0			(100000)		/* mV x 100 */
 #define SEG3_GPU_DVFS_VOLT1			(100000)		/* mV x 100 */
@@ -89,7 +89,7 @@
 #define VGPU_MAX_VOLT				(SEG3_GPU_DVFS_VOLT0)
 #define VSRAM_GPU_MAX_VOLT			(SEG3_GPU_DVFS_VSRAM0)
 #define DELAY_FACTOR				(695)
-#define PMIC_SRCLKEN_HIGH_TIME_US		(1000)	/* spec is 1(ms) */
+#define PMIC_SRCLKEN_HIGH_TIME_US		(2000)	/* spec is 1(ms) */
 #define BUCK_VARIATION_MAX			(25000)	/* mV x 100 */
 #define BUCK_VARIATION_MIN			(10000)	/* mV x 100 */
 
@@ -157,21 +157,21 @@
  * Battery Over Current Protect
  **************************************************/
 #ifdef MT_GPUFREQ_BATT_OC_PROTECT
-#define MT_GPUFREQ_BATT_OC_LIMIT_FREQ			(985000)/* KHz */
+#define MT_GPUFREQ_BATT_OC_LIMIT_FREQ			(1000000)/* KHz */
 #endif
 
 /**************************************************
  * Battery Percentage Protect
  **************************************************/
 #ifdef MT_GPUFREQ_BATT_PERCENT_PROTECT
-#define MT_GPUFREQ_BATT_PERCENT_LIMIT_FREQ		(985000)/* KHz */
+#define MT_GPUFREQ_BATT_PERCENT_LIMIT_FREQ		(1000000)/* KHz */
 #endif
 
 /**************************************************
  * Low Battery Volume Protect
  **************************************************/
 #ifdef MT_GPUFREQ_LOW_BATT_VOLT_PROTECT
-#define MT_GPUFREQ_LOW_BATT_VOLT_LIMIT_FREQ		(985000)/* KHz */
+#define MT_GPUFREQ_LOW_BATT_VOLT_LIMIT_FREQ		(1000000)/* KHz */
 #endif
 
 /**************************************************

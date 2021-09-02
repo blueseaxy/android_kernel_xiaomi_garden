@@ -787,6 +787,12 @@ void mt_gpufreq_low_batt_callback(LOW_BATTERY_LEVEL low_battery_level)
 }
 #endif /* ifdef MT_GPUFREQ_LOW_BATT_VOLT_PROTECT */
 
+/* API : get immediate gpu temperature */
+int mt_gpufreq_get_immed_gpu_temp(void)
+{
+	return get_immediate_gpu_wrap();
+}
+
 /*
  * API : set limited OPP table index for Thermal protection
  */

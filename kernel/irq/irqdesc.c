@@ -27,16 +27,9 @@
  * lockdep: we want to handle all irq_desc locks as a single lock-class:
  */
 static struct lock_class_key irq_desc_lock_class;
-#ifdef CONFIG_SMP
-static int __init irq_affinity_setup(char *str)
+
 #if defined(CONFIG_SMP)
-static void __init init_irq_default_affinity(void)
-{
-	zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
-	cpumask_set_cpu(0, irq_default_affinity);
-}
-#else
-static void __init init_irq_default_affinity(void)
+static int __init irq_affinity_setup(char *str)
 {
 	zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
 	cpulist_parse(str, irq_default_affinity);
@@ -48,14 +41,22 @@ static void __init init_irq_default_affinity(void)
 	return 1;
 }
 __setup("irqaffinity=", irq_affinity_setup);
-#endif
+
 static void __init init_irq_default_affinity(void)
 {
 #ifdef CONFIG_CPUMASK_OFFSTACK
-	zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
-	cpumask_set_cpu(0, irq_default_affinity);
+	if (!irq_default_affinity)
+		zalloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
 #endif
+	if (cpumask_empty(irq_default_affinity))
+		cpumask_setall(irq_default_affinity);
 }
+#else
+static void __init init_irq_default_affinity(void)
+{
+}
+#endif
+
 #ifdef CONFIG_SMP
 static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
 {

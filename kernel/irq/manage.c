@@ -1503,7 +1503,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		}
 
 		if (irq_settings_can_autoenable(desc)) {
-			irq_startup(desc, IRQ_RESEND, IRQ_START_COND);
+			irq_startup(desc, IRQF_SHARED);
 		} else {
 			/*
 			 * Shared interrupts do not go well with disabling
