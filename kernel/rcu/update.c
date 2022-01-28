@@ -66,6 +66,7 @@ static int rcu_normal_after_boot =
 	IS_ENABLED(CONFIG_PREEMPT_RT_FULL) && !IS_ENABLED(CONFIG_ANDROID);
 #if !defined(CONFIG_PREEMPT_RT_FULL) || defined(CONFIG_ANDROID)
 module_param(rcu_normal_after_boot, int, 0);
+#endif
 #endif /* #ifndef CONFIG_TINY_RCU */
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
