@@ -37,8 +37,7 @@
 extern bool read_hi1337_eeprom( kal_uint16 addr, BYTE *data, kal_uint32 size); 
 extern bool read_eeprom( kal_uint16 addr, BYTE * data, kal_uint32 size);
 extern unsigned char fusion_id_main[48];
-#define HI1337_VENDOR_ID  0x36 //0x41 for AAC
- 
+#define HI1337_VENDOR_ID  0x41 //0x41 for AAC 
 
 #define MULTI_WRITE 1
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
