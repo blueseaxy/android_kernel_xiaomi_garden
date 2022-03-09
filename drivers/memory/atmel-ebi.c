@@ -698,6 +698,33 @@ static int at91_ebi_probe(struct platform_device *pdev)
 	if (IS_ERR(ebi->smc))
 		return PTR_ERR(ebi->smc);
 
+	smc_np = of_parse_phandle(dev->of_node, "atmel,smc", 0);
+
+	ebi->smc.regmap = syscon_node_to_regmap(smc_np);
+	if (IS_ERR(ebi->smc.regmap)) {
+		ret = PTR_ERR(ebi->smc.regmap);
+		goto put_node;
+	}
+
+	ebi->smc.layout = atmel_hsmc_get_reg_layout(smc_np);
+	if (IS_ERR(ebi->smc.layout)) {
+		ret = PTR_ERR(ebi->smc.layout);
+		goto put_node;
+	}
+
+	ebi->smc.clk = of_clk_get(smc_np, 0);
+	if (IS_ERR(ebi->smc.clk)) {
+		if (PTR_ERR(ebi->smc.clk) != -ENOENT) {
+			ret = PTR_ERR(ebi->smc.clk);
+			goto put_node;
+		}
+
+		ebi->smc.clk = NULL;
+	}
+	of_node_put(smc_np);
+	ret = clk_prepare_enable(ebi->smc.clk);
+	if (ret)
+		return ret;
 	/*
 	 * The sama5d3 does not provide an EBICSA register and thus does need
 	 * to access the matrix registers.
@@ -750,6 +777,10 @@ static int at91_ebi_probe(struct platform_device *pdev)
 	}
 
 	return of_platform_populate(np, NULL, NULL, dev);
+
+put_node:
+	of_node_put(smc_np);
+	return ret;
 }
 
 static struct platform_driver at91_ebi_driver = {
