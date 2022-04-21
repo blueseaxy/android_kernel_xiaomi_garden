@@ -88,9 +88,27 @@ static void ax25_kill_by_device(struct net_device *dev)
 again:
 	ax25_for_each(s, &ax25_list) {
 		if (s->ax25_dev == ax25_dev) {
-			s->ax25_dev = NULL;
+/*			s->ax25_dev = NULL;
 			spin_unlock_bh(&ax25_list_lock);
 			ax25_disconnect(s, ENETUNREACH);
+*/			sk = s->sk;
+			if (!sk) {
+				spin_unlock_bh(&ax25_list_lock);
+				ax25_disconnect(s, ENETUNREACH);
+				s->ax25_dev = NULL;
+				spin_lock_bh(&ax25_list_lock);
+				goto again;
+			}
+			sock_hold(sk);
+			spin_unlock_bh(&ax25_list_lock);
+			lock_sock(sk);
+			ax25_disconnect(s, ENETUNREACH);
+			s->ax25_dev = NULL;
+			if (sk->sk_socket) {
+				dev_put(ax25_dev->dev);
+				ax25_dev_put(ax25_dev);
+			}
+			release_sock(sk);
 			spin_lock_bh(&ax25_list_lock);
 
 			/* The entry could have been deleted from the
