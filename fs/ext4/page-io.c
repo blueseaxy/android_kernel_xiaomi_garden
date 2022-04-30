@@ -102,12 +102,10 @@ static void ext4_finish_bio(struct bio *bio)
 				if (buffer_async_write(bh))
 					under_io++;
 				continue;
-				}
+			}
 			clear_buffer_async_write(bh);
-			/*if (bio->bi_status) {
-				set_buffer_write_io_error(bh);
+			if (bio->bi_error)
 				buffer_io_error(bh);
-			}*/
 		} while ((bh = bh->b_this_page) != head);
 		bit_spin_unlock(BH_Uptodate_Lock, &head->b_state);
 		local_irq_restore(flags);

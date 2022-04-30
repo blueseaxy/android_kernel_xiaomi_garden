@@ -3251,11 +3251,9 @@ static int count_overhead(struct super_block *sb, ext4_group_t grp,
 	ext4_fsblk_t		first_block, last_block, b;
 	ext4_group_t		i, ngroups = ext4_get_groups_count(sb);
 	int			s, j, count = 0;
-	int			has_super = ext4_bg_has_super(sb, grp);
 
 	if (!ext4_has_feature_bigalloc(sb))
-		return (has_super + ext4_bg_num_gdb(sb, grp) +
-			(has_super ? le16_to_cpu(sbi->s_es->s_reserved_gdt_blocks) : 0) +
+		return (ext4_bg_has_super(sb, grp) + ext4_bg_num_gdb(sb, grp) +
 			sbi->s_itb_per_group + 2);
 
 	first_block = le32_to_cpu(sbi->s_es->s_first_data_block) +
@@ -4134,18 +4132,9 @@ no_journal:
 	 * Get the # of file system overhead blocks from the
 	 * superblock if present.
 	 */
-	sbi->s_overhead = le32_to_cpu(es->s_overhead_clusters);
-	/* ignore the precalculated value if it is ridiculous */
-	if (sbi->s_overhead > ext4_blocks_count(es))
-		sbi->s_overhead = 0;
-	/*
-	 * If the bigalloc feature is not enabled recalculating the
-	 * overhead doesn't take long, so we might as well just redo
-	 * it to make sure we are using the correct value.
-	 */
-	if (!ext4_has_feature_bigalloc(sb))
-		sbi->s_overhead = 0;
-	if (sbi->s_overhead == 0) {
+	if (es->s_overhead_clusters)
+		sbi->s_overhead = le32_to_cpu(es->s_overhead_clusters);
+	else {
 		err = ext4_calculate_overhead(sb);
 		if (err)
 			goto failed_mount_wq;
@@ -4666,8 +4655,10 @@ static int ext4_commit_super(struct super_block *sb, int sync)
 	struct buffer_head *sbh = EXT4_SB(sb)->s_sbh;
 	int error = 0;
 
-	if (!sbh || block_device_ejected(sb))
-		return error;
+	if (!sbh)
+		return -EINVAL;
+	if (block_device_ejected(sb))
+		return -ENODEV;
 
 	/*
 	 * The superblock bh should be mapped, but it might not be if the
@@ -5141,10 +5132,7 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
 		ext4_register_li_request(sb, first_not_zeroed);
 	}
 
-	err = ext4_setup_system_zone(sb);
-	if (err)
-		goto restore_opts;
-
+	ext4_setup_system_zone(sb);
 	if (sbi->s_journal == NULL && !(old_sb_flags & MS_RDONLY))
 		ext4_commit_super(sb, 1);
 
