@@ -374,6 +374,7 @@ static void set_shutter_frame_length(
 static kal_uint16 gain2reg(const kal_uint16 gain)
 {
 	kal_uint16 reg_gain = gain << 4;
+
 	if (reg_gain < GC02M1_SENSOR_GAIN_BASE)
 		reg_gain = GC02M1_SENSOR_GAIN_BASE;
 	else if (reg_gain > GC02M1_SENSOR_GAIN_MAX)
@@ -406,7 +407,6 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	};
 
 	reg_gain = gain2reg(gain);
-
 
 	for (gain_index = GC02M1_SENSOR_GAIN_MAX_VALID_INDEX - 1; gain_index >= 0; gain_index--)
 		if (reg_gain >= GC02M1_AGC_Param[gain_index][0])
@@ -868,7 +868,7 @@ static kal_uint32 close(void)
 static kal_uint32 preview(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	MSDK_SENSOR_CONFIG_STRUCT *sensor_config_data)
 {
-     pr_info("[gc02m1] preview mode start\n");
+    pr_info("[gc02m1] preview mode start\n");
 	spin_lock(&imgsensor_drv_lock);
 	imgsensor.sensor_mode = IMGSENSOR_MODE_PREVIEW;
 	imgsensor.pclk = imgsensor_info.pre.pclk;

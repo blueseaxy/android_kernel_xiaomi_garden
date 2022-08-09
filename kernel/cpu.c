@@ -1093,16 +1093,6 @@ static int cpu_down_maps_locked(unsigned int cpu, enum cpuhp_state target)
 static int do_cpu_down(unsigned int cpu, enum cpuhp_state target)
 {
 	int err;
-
-	preempt_disable();
-	cpumask_andnot(&newmask, cpu_online_mask, cpumask_of(cpu));
-	preempt_enable();
-
-	/* One big and LITTLE  CPU must remain online */
-	if (!cpumask_intersects(&newmask, cpu_lp_mask) ||
-	    !cpumask_intersects(&newmask, cpu_perf_mask))
-		return -EINVAL;
-
 	cpu_maps_update_begin();
 	err = cpu_down_maps_locked(cpu, target);
 	cpu_maps_update_done();
