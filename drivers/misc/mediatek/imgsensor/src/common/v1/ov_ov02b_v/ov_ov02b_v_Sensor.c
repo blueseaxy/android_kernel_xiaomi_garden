@@ -23,7 +23,7 @@
 #include <linux/types.h>
 
 #include "kd_imgsensor_define.h"
-#include "ov_ov02b_ii_Sensor.h"
+#include "ov_ov02b_iiii_Sensor.h"
 
 #define PFX "ov02b_camera_sensor"
 #define LOG_INF(format, args...)    \
@@ -240,9 +240,10 @@ static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
         imgsensor.frame_length = imgsensor_info.max_frame_length;
         imgsensor.dummy_line = imgsensor.frame_length - imgsensor.min_frame_length;
     }
-    if (min_framelength_en){
+    if (min_framelength_en)
         imgsensor.min_frame_length = imgsensor.frame_length;
         spin_unlock(&imgsensor_drv_lock);
+
     set_dummy();
 }    /*    set_max_framerate  */
 
@@ -1939,7 +1940,7 @@ static struct SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 OV_OV02B_II_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
+UINT32 OV_OV02B_IIII_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc!=NULL)

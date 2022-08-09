@@ -21,7 +21,7 @@
 #include <linux/atomic.h>
 #include <linux/types.h>
 
-#include "hynix_hi556_i_Sensor.h"
+#include "hynix_hi556_ii_Sensor.h"
 
 #define PFX "hi556_camera_sensor"
 #define LOG_INF(format, args...)    \
@@ -33,7 +33,7 @@ static DEFINE_SPINLOCK(imgsensor_drv_lock);
 #define per_frame 1
 
 static struct imgsensor_info_struct imgsensor_info = {
-	.sensor_id = HYNIX_HI556_I_SENSOR_ID,
+	.sensor_id = HYNIX_HI556_II_SENSOR_ID,
 	.checksum_value = 0x55e2a82f,
 	.pre = {
 		.pclk = 176000000,
@@ -2277,4 +2277,3 @@ UINT32 HI556_MIPI_RAW_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 		*pfFunc =  &sensor_func;
 	return ERROR_NONE;
 }	/*	HI556_MIPI_RAW_SensorInit	*/
-

@@ -10,6 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
+
 /*****************************************************************************
  *
  * Filename:
@@ -25,8 +26,8 @@
  *	 CMOS sensor header file
  *
  ****************************************************************************/
-#ifndef _HYNIX_HI556_I_SENSOR_H
-#define _HYNIX_HI556_I_SENSOR_H
+#ifndef _HYNIX_HI556_II_SENSOR_H
+#define _HYNIX_HI556_II_SENSOR_H
 
 #include "kd_camera_typedef.h"
 #include "kd_imgsensor.h"
