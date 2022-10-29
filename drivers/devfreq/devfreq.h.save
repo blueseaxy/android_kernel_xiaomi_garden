@@ -1,0 +1,182 @@
+/*
+ * Copyright (C) 2018, Sultan Alsawaf <sultanxda@gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+#define pr_fmt(fmt) "devfreq_boost: " fmt
+#include <linux/devfreq_boost.h>
+#include <linux/fb.h>
+#include <linux/input.h>
+struct df_boost_drv {
+	struct boost_dev devices[DEVFREQ_MAX];
+	struct notifier_block fb_notif;
+};
+static struct df_boost_drv *df_boost_drv_g __read_mostly;
+static void __devfreq_boost_kick(struct boost_dev *b)
+{
+	unsigned long flags;
+	spin_lock_irqsave(&b->lock, flags);
+	if (!b->df || b->disable) {
+		spin_unlock_irqrestore(&b->lock, flags);
+		return;
+	}
+	spin_unlock_irqrestore(&b->lock, flags);
+	queue_work(b->wq, &b->input_boost);
+}
+void devfreq_boost_kick(enum df_device device)
+{
+	struct df_boost_drv *d = df_boost_drv_g;
+	if (!d)
+		return;
+	__devfreq_boost_kick(d->devices + device);
+}
+static void __devfreq_boost_kick_max(struct boost_dev *b,
+	unsigned int duration_ms)
+{
+	unsigned long flags, new_expires;
+	spin_lock_irqsave(&b->lock, flags);
+	if (!b->df || b->disable) {
+		spin_unlock_irqrestore(&b->lock, flags);
+		return;
+	}
+	new_expires = jiffies + b->max_boost_jiffies;
+	if (time_after(b->max_boost_expires, new_expires)) {
+		spin_unlock_irqrestore(&b->lock, flags);
+		return;
+	}
+	b->max_boost_expires = new_expires;
+	b->max_boost_jiffies = msecs_to_jiffies(duration_ms);
+	spin_unlock_irqrestore(&b->lock, flags);
+	queue_work(b->wq, &b->max_boost);
+}
+void devfreq_boost_kick_max(enum df_device device, unsigned int duration_ms)
+{
+	struct df_boost_drv *d = df_boost_drv_g;
+	if (!d)
+		return;
+	__devfreq_boost_kick_max(d->devices + device, duration_ms);
+}
+void devfreq_register_boost_device(enum df_device device, struct devfreq *df)
+{
+	struct df_boost_drv *d = df_boost_drv_g;
+	struct boost_dev *b;
+	unsigned long flags;
+	if (!d)
+		return;
+	df->is_boost_device = true;
+	b = d->devices + device;
+	spin_lock_irqsave(&b->lock, flags);
+	b->df = df;
+	spin_unlock_irqrestore(&b->lock, flags);
+}
+struct boost_dev *devfreq_get_boost_dev(enum df_device device)
+{
+	struct df_boost_drv *d = df_boost_drv_g;
+	if (!d)
+		return NULL;
+	return d->devices + device;
+}
+static unsigned long devfreq_abs_min_freq(struct boost_dev *b)
+{
+	struct devfreq *df = b->df;
+	int i;
+	/* Reuse the absolute min freq found the first time this was called */
+	if (b->abs_min_freq != ULONG_MAX)
+		return b->abs_min_freq;
+	/* Find the lowest non-zero freq from the freq table */
+	for (i = 0; i < df->profile->max_state; i++) {
+		unsigned int freq = df->profile->freq_table[i];
+		if (!freq)
+			continue;
+		if (b->abs_min_freq > freq)
+			b->abs_min_freq = freq;
+	}
+	/* Use zero for the absolute min freq if nothing was found */
+	if (b->abs_min_freq == ULONG_MAX)
+		b->abs_min_freq = 0;
+	return b->abs_min_freq;
+}
+static void devfreq_disable_boosting(struct df_boost_drv *d, bool disable)
+{
+	int i;
+	for (i = 0; i < DEVFREQ_MAX; i++) {
+		struct boost_dev *b = d->devices + i;
+		unsigned long flags;
+		spin_lock_irqsave(&b->lock, flags);
+		b->disable = disable;
+		spin_unlock_irqrestore(&b->lock, flags);
+	}
+}
+static void devfreq_unboost_all(struct df_boost_drv *d)
+{
+	int i;
+	for (i = 0; i < DEVFREQ_MAX; i++) {
+		struct boost_dev *b = d->devices + i;
+		struct devfreq *df;
+		unsigned long flags;
+		spin_lock_irqsave(&b->lock, flags);
+		df = b->df;
+		spin_unlock_irqrestore(&b->lock, flags);
+		if (!df)
+			continue;
+		cancel_work_sync(&b->max_boost);
+		cancel_delayed_work_sync(&b->max_unboost);
+		cancel_work_sync(&b->input_boost);
+		cancel_delayed_work_sync(&b->input_unboost);
+		mutex_lock(&df->lock);
+		df->max_boost = false;
+		df->min_freq = devfreq_abs_min_freq(b);
+		update_devfreq(df);
+		mutex_unlock(&df->lock);
+	}
+}
+static void devfreq_input_boost(struct work_struct *work)
+{
+	struct boost_dev *b = container_of(work, typeof(*b), input_boost);
+	if (!cancel_delayed_work_sync(&b->input_unboost)) {
+		struct devfreq *df = b->df;
+		unsigned long boost_freq, flags;
+		spin_lock_irqsave(&b->lock, flags);
+		boost_freq = b->boost_freq;
+		spin_unlock_irqrestore(&b->lock, flags);
+		mutex_lock(&df->lock);
+		if (df->max_freq)
+			df->min_freq = min(boost_freq, df->max_freq);
+		else
+			df->min_freq = boost_freq;
+		update_devfreq(df);
+		mutex_unlock(&df->lock);
+	}
+	queue_delayed_work(b->wq, &b->input_unboost,
+		msecs_to_jiffies(CONFIG_DEVFREQ_INPUT_BOOST_DURATION_MS));
+}
+static void devfreq_input_unboost(struct work_struct *work)
+{
+	struct boost_dev *b =
+		container_of(to_delayed_work(work), typeof(*b), input_unboost);
+	struct devfreq *df = b->df;
+	mutex_lock(&df->lock);
+	df->min_freq = devfreq_abs_min_freq(b);
+	update_devfreq(df);
+	mutex_unlock(&df->lock);
+}
+static void devfreq_max_boost(struct work_struct *work)
+{
+	struct boost_dev *b = container_of(work, typeof(*b), max_boost);
+	unsigned long boost_jiffies, flags;
+	if (!cancel_delayed_work_sync(&b->max_unboost)) {
+		struct devfreq *df = b->df;
+		mutex_lock(&df->lock);
+		df->max_boost = true;
+		update_devfreq(df);
+		mutex_unlock(&df->lock);
+	}
+	spin_lock_irqsave(&b->lock, flags);
+	boost_jiffie
