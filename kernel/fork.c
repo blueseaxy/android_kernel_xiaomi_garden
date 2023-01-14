@@ -79,7 +79,8 @@
 #include <linux/kcov.h>
 #include <linux/cpufreq_times.h>
 #include <linux/simple_lmk.h>
-
+#include <linux/cpufreq.h>
+#include <linux/cpu.h>
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
 #include <asm/uaccess.h>
@@ -1979,6 +1980,7 @@ struct task_struct *fork_idle(int cpu)
 	return task;
 }
 
+extern int kp_active_mode(void);
 /*
  *  Ok, this is the main fork-routine.
  *
@@ -1996,6 +1998,15 @@ long _do_fork(unsigned long clone_flags,
 	int trace = 0;
 	long nr;
 	unsigned long long start, end, dur;
+        struct cpufreq_policy *policy;
+   /*
+    * Dont boost CPU & DDR if battery saver profile is enabled
+    * and boost CPU & DDR for 25ms if balanced profile is enabled
+    */
+       if (kp_active_mode() == 3 || kp_active_mode() == 0) {
+           cpumask_test_cpu(policy->cpu, cpu_lp_mask);
+           cpumask_test_cpu(policy->cpu, cpu_perf_mask);
+         }
 
 	start = sched_clock();
 	/*

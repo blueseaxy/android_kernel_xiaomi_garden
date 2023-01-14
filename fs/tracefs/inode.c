@@ -220,9 +220,7 @@ static int tracefs_apply_options(struct super_block *sb)
 	inode->i_mode |= opts->mode;
 
 	inode->i_uid = opts->uid;
-
-	/* Set all the group ids to the mount option */
-	set_gid(sb->s_root, opts->gid);
+	inode->i_gid = opts->gid;
 
 	return 0;
 }

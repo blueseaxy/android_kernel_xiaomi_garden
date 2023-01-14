@@ -81,7 +81,7 @@ void mt_accdet_remove(void);
 void mt_accdet_suspend(void);
 void mt_accdet_resume(void);
 void mt_accdet_pm_restore_noirq(void);
-long mt_accdet_unlocked_ioctl(unsigned int cmd, unsigned long arg);
+/*long mt_accdet_unlocked_ioctl(unsigned int cmd, unsigned long arg);*/
 int mt_accdet_probe(struct platform_device *dev);
 int accdet_get_cable_type(void);
 void accdet_auxadc_switch(int enable);

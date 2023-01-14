@@ -71,7 +71,8 @@ lkdtm-$(CONFIG_LKDTM)		+= lkdtm_usercopy.o
 obj-$(CONFIG_ANT_CHECK)		+= ant_check.o
 obj-$(CONFIG_ANT_CHECK_DIV)	+= ant_check_div.o
 obj-$(CONFIG_SIMTRAY_STATUS)	+= simtray.o
-
+obj-$(CONFIG_KPROFILES) += kprofiles/
+obj-y += qti-haptics.o
 CFLAGS_lkdtm_rodata.o		+= $(DISABLE_LTO)
 KCOV_INSTRUMENT_lkdtm_rodata.o	:= n
 
