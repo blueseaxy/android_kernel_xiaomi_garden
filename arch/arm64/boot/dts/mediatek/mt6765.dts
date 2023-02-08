@@ -35,10 +35,10 @@
 
 	/* chosen */
 	chosen: chosen {
-		bootargs = "console=tty0 console=ttyS0,921600n1 vmalloc=400M \
-slub_debug=OFZPU page_owner=on \
-swiotlb=noforce androidboot.hardware=mt6765 \
-maxcpus=8 loop.max_part=7 \
+		bootargs = "console=tty0 console=ttyS0,921600n1 vmalloc=425M \
+page_owner=on  quiet nodebugmon no_debug_objects \
+androidboot.hardware=mt6765 \
+maxcpus=8 loop.max_part=16 \
 firmware_class.path=/vendor/firmware";
 		kaslr-seed = <0 0>;
 	};
@@ -165,25 +165,25 @@ firmware_class.path=/vendor/firmware";
 			STANDBY: standby {
 				compatible = "arm,idle-state";
 				arm,psci-suspend-param = <0x00000001>;
-				entry-latency-us = <600>;
-				exit-latency-us = <600>;
-				min-residency-us = <1200>;
+				entry-latency-us = <500>;
+				exit-latency-us = <500>;
+				min-residency-us = <1000>;
 			};
 
 			MCDI_CPU: mcdi-cpu {
 				compatible = "arm,idle-state";
 				arm,psci-suspend-param = <0x00010001>;
-				entry-latency-us = <600>;
-				exit-latency-us = <600>;
-				min-residency-us = <1200>;
+				entry-latency-us = <500>;
+				exit-latency-us = <500>;
+				min-residency-us = <1000>;
 			};
 
 			MCDI_CLUSTER: mcdi-cluster {
 				compatible = "arm,idle-state";
 				arm,psci-suspend-param = <0x01010001>;
-				entry-latency-us = <600>;
-				exit-latency-us = <600>;
-				min-residency-us = <1200>;
+				entry-latency-us = <500>;
+				exit-latency-us = <500>;
+				min-residency-us = <1000>;
 			};
 
 			SODI: sodi {
@@ -191,7 +191,7 @@ firmware_class.path=/vendor/firmware";
 				arm,psci-suspend-param = <0x01010002>;
 				entry-latency-us = <800>;
 				exit-latency-us = <1000>;
-				min-residency-us = <2000>;
+				min-residency-us = <1800>;
 			};
 
 			SODI3: sodi3 {
@@ -199,7 +199,7 @@ firmware_class.path=/vendor/firmware";
 				arm,psci-suspend-param = <0x01010003>;
 				entry-latency-us = <800>;
 				exit-latency-us = <1000>;
-				min-residency-us = <2000>;
+				min-residency-us = <1800>;
 			};
 
 			DPIDLE: dpidle {
@@ -207,7 +207,7 @@ firmware_class.path=/vendor/firmware";
 				arm,psci-suspend-param = <0x01010004>;
 				entry-latency-us = <800>;
 				exit-latency-us = <1000>;
-				min-residency-us = <2000>;
+				min-residency-us = <1800>;
 			};
 
 			SUSPEND: suspend {
@@ -215,7 +215,7 @@ firmware_class.path=/vendor/firmware";
 				arm,psci-suspend-param = <0x01010005>;
 				entry-latency-us = <800>;
 				exit-latency-us = <1000>;
-				min-residency-us = <2000>;
+				min-residency-us = <1800>;
 			};
 		};
 	};
@@ -258,11 +258,7 @@ firmware_class.path=/vendor/firmware";
 			compatible = "mediatek,reserve-memory-sspm_share";
 			no-map;
 			status = "okay";
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE) || defined(CONFIG_MTK_MET_MEM_ALLOC)
 			size = <0 0x110000>; /* 1M + 64K */
-#else
-			size = <0 0x510000>; /* 5M + 64K */
-#endif
 			alignment = <0 0x10000>;
 			alloc-ranges = <0 0x40000000 0 0x60000000>;
 		};
@@ -270,7 +266,7 @@ firmware_class.path=/vendor/firmware";
 		reserve-memory-scp_share {
 			compatible = "mediatek,reserve-memory-scp_share";
 			no-map;
-			size = <0 0x00300000>;
+			size = <0 0x00200000>;
 			alignment = <0 0x1000000>;
 			alloc-ranges = <0 0x40000000 0 0x50000000>;
 		};
@@ -295,36 +291,11 @@ firmware_class.path=/vendor/firmware";
 		soter-shared-mem {
 			compatible = "microtrust,shared_mem";
 			no-map;
-#if defined(CONFIG_MTK_SEC_VIDEO_PATH_SUPPORT) || \
-	defined(CONFIG_MTK_CAM_SECURITY_SUPPORT)
-			size = <0 0x2000000>;
-			alignment = <0 0x1000000>;
-#else
-			size = <0 0x600000>;
-#endif
+			size = <0 0x100000>;
 			alloc-ranges = <0 0x40000000 0 0x50000000>;
 		};
 #endif
 
-	};
-
-	cpu_dbgapb: cpu_dbgapb@0d410000 {
-		compatible = "mediatek,hw_dbg";
-		num = <8>;
-		reg =	<0 0x0d410000 0 0x1000>,
-			<0 0x0d510000 0 0x1000>,
-			<0 0x0d610000 0 0x1000>,
-			<0 0x0d710000 0 0x1000>,
-			<0 0x0d810000 0 0x1000>,
-			<0 0x0d910000 0 0x1000>,
-			<0 0x0da10000 0 0x1000>,
-			<0 0x0db10000 0 0x1000>;
-	};
-
-	/* ATF logger SW IRQ number 279 = 32 + 247 */
-	atf_logger {
-		compatible = "mediatek,atf_logger";
-		interrupts = <GIC_SPI 247 IRQ_TYPE_EDGE_RISING>;
 	};
 
 	/* AMMS SW IRQ number GIC:166 DTS:134*/
@@ -478,11 +449,6 @@ firmware_class.path=/vendor/firmware";
 		compatible = "mediatek,pericfg", "syscon";
 		reg = <0 0x10003000 0 0x1000>;
 		#clock-cells = <1>;
-	};
-
-	efuse_dbg@10004000 {
-		compatible = "mediatek,efuse_dbg";
-		reg = <0 0x10004000 0 0x1000>;
 	};
 
 	gpio_usage_mapping:gpio {
@@ -881,14 +847,6 @@ firmware_class.path=/vendor/firmware";
 		clock-names = "devapc-infra-clock";
 	};
 
-	bus_dbg@10208000 {
-		compatible = "mediatek,bus_dbg-v2";
-		reg = <0 0x10208000 0 0x1000>,
-			<0 0x10001000 0 0x1000>;
-		mediatek,bus_dbg_con_offset = <0x2fc>;
-		interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_LOW>;
-	};
-
 	ap_ccif0@10209000 {
 		compatible = "mediatek,ap_ccif0";
 		reg = <0 0x10209000 0 0x1000>;
@@ -1229,7 +1187,7 @@ firmware_class.path=/vendor/firmware";
 		venc_mb_done = <292>;
 		venc_128byte_cnt_done = <293>;
 		max_prefetch_cnt = <1>;
-		prefetch_size = <96>;
+		prefetch_size = <64>;
 		sram_size_cpr_64 = <64>;
 		mmsys_config = <&mmsys_config>;
 		mdp_rdma0 = <&mdp_rdma0>;
@@ -1383,202 +1341,6 @@ firmware_class.path=/vendor/firmware";
 		mediatek,enabled = <1>;
 		mediatek,chain_length = <0xc350>;
 		mediatek,rg_dfd_timeout = <0xa0>;
-	};
-
-	dbg_cti@0d020000 {
-		compatible = "mediatek,dbg_cti";
-		reg = <0 0x0d020000 0 0x10000>;
-	};
-
-	dbg_etr@0d030000 {
-		compatible = "mediatek,dbg_etr";
-		reg = <0 0x0d030000 0 0x10000>;
-	};
-
-	dbg_funnel@0d040000 {
-		compatible = "mediatek,dbg_funnel";
-		reg = <0 0x0d040000 0 0x10000>;
-	};
-
-	dbg_dem@0d0a0000 {
-		compatible = "mediatek,dbg_dem";
-		reg = <0 0x0d0a0000 0 0x10000>;
-		interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_LOW>;
-	};
-
-	dbg_mdsys1@0d0c0000 {
-		compatible = "mediatek,dbg_mdsys1";
-		reg = <0 0x0d0c0000 0 0x40000>;
-	};
-
-	dbg_apmcu_mp0@0d400000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d400000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d410000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d410000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d420000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d420000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d430000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d430000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d440000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d440000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d510000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d510000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d520000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d520000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d530000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d530000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d540000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d540000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d610000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d610000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d620000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d620000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d630000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d630000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d640000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d640000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d710000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d710000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d720000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d720000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d730000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d730000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp0@0d740000 {
-		compatible = "mediatek,dbg_apmcu_mp0";
-		reg = <0 0x0d740000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d800000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d800000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d810000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d810000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d820000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d820000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d830000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d830000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d840000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d840000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d910000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d910000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d920000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d920000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d930000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d930000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0d940000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0d940000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0da10000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0da10000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0da20000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0da20000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0da30000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0da30000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0da40000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0da40000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0db10000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0db10000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0db20000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0db20000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0db30000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0db30000 0 0x1000>;
-	};
-
-	dbg_apmcu_mp1@0db40000 {
-		compatible = "mediatek,dbg_apmcu_mp1";
-		reg = <0 0x0db40000 0 0x1000>;
 	};
 
 	ap_dma@11000000 {
@@ -2999,14 +2761,14 @@ firmware_class.path=/vendor/firmware";
 
 	memory_ssmr_features: memory-ssmr-features {
 		compatible = "mediatek,memory-ssmr-features";
-		svp-size = <0 0x10000000>;
-		iris-recognition-size = <0 0x10000000>;
-		2d_fr-size = <0 0x8000000>;
-		tui-size = <0 0x4000000>;
-		wfd-size = <0 0x4000000>;
-		prot-sharedmem-size = <0 0x8000000>;
+		svp-size = <0 0x09000000>;
+		iris-recognition-size = <0 0x1000000>;
+		2d_fr-size = <0 0x5000000>;
+		tui-size = <0 0x3000000>;
+		wfd-size = <0 0x3000000>;
+		prot-sharedmem-size = <0 0x5000000>;
 		ta-elf-size = <0 0x1000000>;
-		ta-stack-heap-size = <0 0x6000000>;
+		ta-stack-heap-size = <0 0x4000000>;
 		sdsp-tee-sharedmem-size = <0 0x1000000>;
 		sdsp-firmware-size = <0 0x1000000>;
 	};

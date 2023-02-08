@@ -88,7 +88,7 @@
  **************************************************/
 #define VGPU_MAX_VOLT				(SEG3_GPU_DVFS_VOLT0)
 #define VSRAM_GPU_MAX_VOLT			(SEG3_GPU_DVFS_VSRAM0)
-#define DELAY_FACTOR				(695)
+#define DELAY_FACTOR				(0)
 #define PMIC_SRCLKEN_HIGH_TIME_US		(2000)	/* spec is 1(ms) */
 #define BUCK_VARIATION_MAX			(25000)	/* mV x 100 */
 #define BUCK_VARIATION_MIN			(10000)	/* mV x 100 */
@@ -213,7 +213,7 @@ static int mt_ ## name ## _proc_open(struct inode *inode, struct file *file)\
  * Operation Definition
  **************************************************/
 #define VOLT_NORMALIZATION(volt)\
-((volt % 625) ? (volt - (volt % 625) + 625) : volt)
+((volt % 925) ? (volt - (volt % 925) + 925) : volt)
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define GPUOP(khz, volt, vsram, idx)	\
 	{	\
