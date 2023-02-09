@@ -120,3 +120,7 @@ kernel/configs/android-*.cfg
 
 # out/ directory
 out/
+
+KernelSU/
+
+interrupt.h
