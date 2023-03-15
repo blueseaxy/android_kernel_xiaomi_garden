@@ -477,7 +477,7 @@ struct LCM_DPI_PARAMS {
 
 
 /* ------------------------------------------------------------------------- */
-#define RT_MAX_NUM 10
+#define RT_MAX_NUM 20
 #define ESD_CHECK_NUM 3
 struct LCM_esd_check_item {
 	unsigned char cmd;

@@ -14,6 +14,7 @@
 #
 # Makefile for misc devices that really don't fit anywhere else.
 #
+KBUILD_CFLAGS += -fdata-sections -ffunction-sections -finline-functions -ftree-vectorize -funroll-loops
 
 obj-$(CONFIG_MTK_LCM) += mt65xx_lcm_list.o        \
                          lcm_common.o             \

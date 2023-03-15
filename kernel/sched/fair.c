@@ -5669,7 +5669,8 @@ static inline bool
 bias_to_waker_cpu(struct task_struct *p, int cpu, struct cpumask *rtg_target)
 {
 	bool base_test = cpumask_test_cpu(cpu, &p->cpus_allowed) &&
-			cpu_active(cpu) && task_fits_max(p, cpu) &&
+/*			cpu_active(cpu) && task_fits_max(p, cpu) */
+                         cpu_active(cpu) &&
 			cpu_is_in_target_set(p, cpu);
 	bool rtg_test = rtg_target && cpumask_test_cpu(cpu, rtg_target);
 
@@ -5772,7 +5773,7 @@ struct eenv_cpu {
 #endif /* DEBUG_EENV_DECISIONS */
 };
 
-struct energy_env {
+struct eneyrgy_env {
 	/* Utilization to move */
 	struct task_struct	*p;
 	unsigned long		util_delta;

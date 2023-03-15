@@ -124,3 +124,11 @@ out/
 KernelSU/
 
 interrupt.h
+
+gcc/
+
+clang/
+
+toolchains/
+
+kuro/

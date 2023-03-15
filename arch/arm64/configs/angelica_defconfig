@@ -47,7 +47,7 @@ CONFIG_THREAD_INFO_IN_TASK=y
 CONFIG_INIT_ENV_ARG_LIMIT=32
 CONFIG_CROSS_COMPILE="aarch64-linux-gnu-"
 # CONFIG_COMPILE_TEST is not set
-CONFIG_LOCALVERSION="-BluSea-Segggs"
+CONFIG_LOCALVERSION="-BluSea-Bubble-HMP-garden"
 # CONFIG_LOCALVERSION_AUTO is not set
 CONFIG_DEFAULT_HOSTNAME="nohavenames"
 CONFIG_SWAP=y
@@ -172,7 +172,7 @@ CONFIG_SOCK_CGROUP_DATA=y
 CONFIG_SCHED_TUNE=y
 # CONFIG_STUNE_ASSIST is not set
 # CONFIG_CPUSETS_ASSIST is not set
-CONFIG_DEFAULT_USE_ENERGY_AWARE=y
+CONFIG_DEFAULT_USE_ENERGY_AWARE=n
 # CONFIG_SYSFS_DEPRECATED is not set
 # CONFIG_RELAY is not set
 CONFIG_BLK_DEV_INITRD=y
@@ -1432,7 +1432,7 @@ CONFIG_IMGSENSOR_SUB2=""
 CONFIG_MTK_CAM_CAL=y
 CONFIG_MTK_JPEG=y
 CONFIG_MTK_LCM=y
-CONFIG_CUSTOM_KERNEL_LCM="nt36525b_vdo_hdp_boe_dijing ft8006s_vdo_hdp_boe_helitai hx83102d_vdo_hdp_boe_xinli nt36525b_vdo_hdp_boe_helitai nt36525b_vdo_hdp_panda_shengchao"
+CONFIG_CUSTOM_KERNEL_LCM="nt36525b_vdo_hdp_boe_dijing ft8006s_vdo_hdp_boe_helitai ft8006s_ab_vdo_hdp_boe_helitai ft8006s_ac_vdo_hdp_boe_helitai hx83102d_vdo_hdp_boe_xinli nt36525b_vdo_hdp_boe_helitai nt36525b_vdo_hdp_panda_shengchao nt36525b_vdo_hdp_boe_xinli icnl9911c_vdo_hdp_boe_tianma icnl9911c_vdo_hdp_boe_xinli"
 # CONFIG_MTK_LCM_DEVICE_TREE_SUPPORT is not set
 
 #
@@ -1689,9 +1689,9 @@ CONFIG_MTK_SCHED_INTEROP=y
 #
 # MTK Energy Aware Scheduler Plus
 #
-CONFIG_MTK_SCHED_EAS_POWER_SUPPORT=y
+CONFIG_MTK_SCHED_EAS_POWER_SUPPORT=n
 CONFIG_CPU_FREQ_DEFAULT_GOV_SCHEDPLUS=y
-CONFIG_CPU_FREQ_SCHED_ASSIST=y
+CONFIG_CPU_FREQ_SCHED_ASSIST=n
 CONFIG_CPU_FREQ_GOV_SCHEDPLUS=y
 
 #
