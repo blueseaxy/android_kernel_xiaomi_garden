@@ -1588,14 +1588,6 @@ firmware_class.path=/vendor/firmware";
 	};
 
 
-	therm_ctrl@1100b000 {
-		compatible = "mediatek,therm_ctrl";
-		reg = <0 0x1100b000 0 0x1000>;
-		interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_LOW>;
-		clocks = <&infracfg_ao CLK_IFR_THERM>;
-		clock-names = "therm-main";
-	};
-
 	btif@1100c000 {
 		compatible = "mediatek,btif";
 			/*btif base*/
@@ -2577,12 +2569,12 @@ firmware_class.path=/vendor/firmware";
 		/* enable_pd20_reset; */
 		power_path_support;
 		max_charger_voltage = <6500000>;
-		fast_charge_voltage = <3000000>;
+		fast_charge_voltage = <6000000>;
 
 		/* charging current */
 		usb_charger_current = <500000>;
-		ac_charger_current = <1500000>;
-		ac_charger_input_current = <3200000>;
+		ac_charger_current = <4500000>;
+		ac_charger_input_current = <5200000>;
 		non_std_ac_charger_current = <1020000>;
 		charging_host_charger_current = <1500000>;
 		ta_ac_charger_current = <3000000>;
@@ -2609,7 +2601,7 @@ firmware_class.path=/vendor/firmware";
 		/* common */
 		battery_cv = <4368000>;
 		max_charger_voltage = <6500000>;
-		min_charger_voltage = <4420000>;
+		min_charger_voltage = <5420000>;
 
 		/* dynamic mivr */
 		min_charger_voltage_1 = <4420000>;
@@ -2658,7 +2650,7 @@ firmware_class.path=/vendor/firmware";
 		enable_min_charge_temp;
 		min_charge_temp = <0>;
 		min_charge_temp_plus_x_degree = <6>;
-		max_charge_temp = <50>;
+		max_charge_temp = <40>;
 		max_charge_temp_minus_x_degree = <47>;
 
 		/* PE */
