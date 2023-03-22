@@ -15,7 +15,7 @@
 #include <linux/mutex.h>
 #include <linux/delay.h>
 #include <linux/time.h>
-
+#include <linux/fastchg.h>
 #include <mt-plat/mtk_boot.h>
 #include <mt-plat/charger_type.h>
 #include <mt-plat/mtk_battery.h>
@@ -221,6 +221,7 @@ void mtk_pe40_reset(struct charger_manager *pinfo, bool enable)
 
 	pe40 = &pinfo->pe4;
 
+
 	if (pe40->is_connect == true) {
 		//tcpm_set_pd_charging_policy(pinfo->tcpc,
 		//	DPM_CHARGING_POLICY_VSAFE5V, NULL);
@@ -289,22 +290,22 @@ int mtk_pe40_get_setting_by_watt(struct charger_manager *pinfo, int *voltage,
 	pe40 = &pinfo->pe4;
 
 	pe40_cap = &pinfo->pe4.cap;
+
 	for (i = 0; i < pe40_cap->nr; i++) {
 		int max_ibus = 0;
 		int max_vbus = 0;
+
+               if (force_fast_charge == 1) {
+                watt = pe40_cap->pdp * 2000000;
+                max_ibus = pe40->pe4_input_current_limit / 2000;
+                max_ibus = pe40->pe4_input_current_limit / 2000;
+        }
 
 		/* update upper bound */
 		if (pe40_cap->ma[i] > pe40->max_ibus)
 			max_ibus = pe40->max_ibus;
 		else
 			max_ibus = pe40_cap->ma[i];
-
-		if (max_ibus > pinfo->pe4.input_current_limit / 1000)
-			max_ibus = pinfo->pe4.input_current_limit / 1000;
-
-		if (pe40->pe4_input_current_limit != -1 &&
-			max_ibus > (pe40->pe4_input_current_limit / 1000))
-			max_ibus = pe40->pe4_input_current_limit / 1000;
 
 		pe40->max_charger_ibus = max_ibus *
 					(100 - pinfo->data.ibus_err) / 100;
@@ -361,9 +362,6 @@ int mtk_pe40_get_setting_by_watt(struct charger_manager *pinfo, int *voltage,
 
 		/* is power limit set */
 		if (pe40_cap->pwr_limit[i] && pe40_cap->pdp > 0) {
-			if (watt > pe40_cap->pdp * 1000000)
-				watt = pe40_cap->pdp * 1000000;
-
 			if (max_vbus * (pe40->max_charger_ibus - 200) >= watt) {
 				ibus = pe40->max_charger_ibus - 200;
 				vbus = watt / ibus;
@@ -1140,12 +1138,11 @@ err:
 }
 
 
+
 bool mtk_pe40_init(struct charger_manager *pinfo)
 {
 	mtk_pe40_reset(pinfo, true);
 
 	return true;
 }
-
-
 

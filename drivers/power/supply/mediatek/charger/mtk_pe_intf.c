@@ -16,7 +16,7 @@
 #include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>
-
+#include <linux/fastchg.h>
 #include <upmu_common.h>
 #include "mtk_charger_intf.h"
 #include "mtk_charger_init.h"
@@ -298,7 +298,7 @@ int mtk_pe_init(struct charger_manager *pinfo)
 	mutex_init(&pinfo->pe.access_lock);
 	mutex_init(&pinfo->pe.pmic_sync_lock);
 
-	pinfo->pe.ta_vchr_org = 5000000;
+	pinfo->pe.ta_vchr_org = 6000000;
 	pinfo->pe.to_check_chr_type = true;
 	pinfo->pe.to_tune_ta_vchr = true;
 	pinfo->pe.is_enabled = true;
@@ -568,7 +568,9 @@ int mtk_pe_set_charging_current(struct charger_manager *pinfo,
 		*aicr = pinfo->data.ta_ac_7v_input_current;
 		*ichg = pinfo->data.ta_ac_charger_current;
 	}
-
+          if (force_fast_charge == 1) {
+           chr_volt = 7000000;
+}
 	chr_info("%s: Ichg= %dmA, AICR = %dmA, chr_org = %d, chr_after = %d\n",
 		__func__, *ichg / 1000, *aicr / 1000, pe->ta_vchr_org / 1000,
 		chr_volt / 1000);
