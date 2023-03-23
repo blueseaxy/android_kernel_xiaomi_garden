@@ -25,12 +25,12 @@ obj-y	+= cfq-iosched.o
 obj-$(CONFIG_IOSCHED_TEST)	+= test-iosched.o
 #obj-y	+= zen-iosched.o
 #obj-y     += maple-iosched.o
-obj-y	+= anxiety-iosched.o
+#obj-y	+= anxiety-iosched.o
 #obj-y     += fiops-iosched.o
 obj-y       += sio-iosched.o
 #obj-y        += tripndroid-iosched.o
 #obj-y	+= row-iosched.o
-obj-y		+= fifo-iosched.o
+#obj-y		+= fifo-iosched.o
 
 obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
 obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
