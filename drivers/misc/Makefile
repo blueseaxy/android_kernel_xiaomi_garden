@@ -75,7 +75,7 @@ obj-$(CONFIG_SIMTRAY_STATUS)	+= simtray.o
 obj-$(CONFIG_KPROFILES) += kprofiles/
 obj-y += fastchg.o
 obj-y += qti-haptics.o
-obj-y += sound_control.o
+#obj-y += sound_control.o
 CFLAGS_lkdtm_rodata.o		+= $(DISABLE_LTO)
 KCOV_INSTRUMENT_lkdtm_rodata.o	:= n
 

@@ -13,7 +13,7 @@
 #ifndef __WCD9310_SLIMSLAVE_H_
 #define __WCD9310_SLIMSLAVE_H_
 
-#include <linux/slimbus.h>
+//#include <linux/slimbus.h>
 #include <linux/mfd/wcd9xxx/core.h>
 
 /* Channel numbers to be used for each port */

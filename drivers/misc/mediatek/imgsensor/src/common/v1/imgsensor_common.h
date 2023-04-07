@@ -26,6 +26,7 @@
  ************************************************************************/
 
 #define PLATFORM_POWER_SEQ_NAME "platform_power_seq"
+#define DEBUG_CAMERA_HW_K
 
 #define IMGSENSOR_LEGACY_COMPAT
 #define IMGSENSOR_TOSTRING(value)           #value

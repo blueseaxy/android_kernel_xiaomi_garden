@@ -110,14 +110,14 @@ static struct i2c_driver tps65132_iic_driver = {
 static int tps65132_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	tps65132_i2c_client = client;
 	return 0;
 }
 
 static int tps65132_remove(struct i2c_client *client)
 {
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	//tps65132_i2c_client = NULL;
 	i2c_unregister_device(client);
 	return 0;
@@ -132,23 +132,23 @@ int tps65132_write_bytes(unsigned char addr, unsigned char value)
 	write_data[1] = value;
 	ret = i2c_master_send(client, write_data, 2);
 	if (ret < 0)
-		no_printk("[LCM]tps65132 write data fail !!\n");
+		pr_info("[LCM]tps65132 write data fail !!\n");
 	return ret;
 }
 
 static int __init tps65132_iic_init(void)
 {
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	i2c_register_board_info(TPS_I2C_BUSNUM, &tps65132_board_info, 1);
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	i2c_add_driver(&tps65132_iic_driver);
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	return 0;
 }
 
 static void __exit tps65132_iic_exit(void)
 {
-	no_printk("[LCM]%s\n",__func__);
+	pr_info("[LCM]%s\n",__func__);
 	i2c_del_driver(&tps65132_iic_driver);
 }
 

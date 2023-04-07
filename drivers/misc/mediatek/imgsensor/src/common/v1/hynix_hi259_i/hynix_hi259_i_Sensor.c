@@ -29,7 +29,7 @@
 	pr_devel(PFX "[%s] " format, __func__, ##args)
 
 #define per_frame 1
-#define hi259_vendor_id 0x0 //0x2 for truly
+#define hi259_vendor_id 0x02 //0x2 for truly
 extern unsigned char fusion_id_back2[48];
 
 #define MULTI_WRITE 0

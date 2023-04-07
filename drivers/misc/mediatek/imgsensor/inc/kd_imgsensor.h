@@ -341,7 +341,6 @@
 #define T8EV5_SENSOR_ID                         0x1011
 
 /*M505 ImageSensor*/
-#define HYNIX_HI556_I_SENSOR_ID                0x556
 #define GC_GC5035_I_SENSOR_ID			0x5035
 #define GC_GC5035_II_SENSOR_ID			0x5036
 #define GC_GC5035_III_SENSOR_ID			0x5037
@@ -349,7 +348,7 @@
 #define HYNIX_HI1337_I_SENSOR_ID                0x1337
 #define HYNIX_HI1337_II_SENSOR_ID               0x1338
 #define HYNIX_HI1337_III_SENSOR_ID              0x1339
-#define HYNIX_HI1337_IIII_SENSOR_ID              0x1340
+#define HYNIX_HI1337_IIII_SENSOR_ID             0x133A
 #define GC02M1_SENSOR_ID                        0x02e0
 #define GC02M1MACRO_SENSOR_ID                   0x02e2
 #define HYNIX_HI259_I_SENSOR_ID 	0xe1
@@ -552,7 +551,6 @@
 #define SENSOR_DRVNAME_OV13870_MIPI_RAW_5MP     "ov13870_mipi_raw_5mp"
 #define SENSOR_DRVNAME_OV8856_MIPI_RAW_5MP      "ov8856_mipi_raw_5mp"
 /*M505 SENSOR_DRVNAME*/
-#define SENSOR_DRVNAME_HYNIX_HI556_I             "hynix_hi556_i"
 #define SENSOR_DRVNAME_GC_GC5035_I      "gc_gc5035_i"
 #define SENSOR_DRVNAME_GC_GC5035_II      "gc_gc5035_ii"
 #define SENSOR_DRVNAME_GC_GC5035_III      "gc_gc5035_iii"
