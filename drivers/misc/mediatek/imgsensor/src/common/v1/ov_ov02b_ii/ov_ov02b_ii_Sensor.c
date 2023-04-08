@@ -240,9 +240,10 @@ static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
         imgsensor.frame_length = imgsensor_info.max_frame_length;
         imgsensor.dummy_line = imgsensor.frame_length - imgsensor.min_frame_length;
     }
-    if (min_framelength_en){
+    if (min_framelength_en) {
         imgsensor.min_frame_length = imgsensor.frame_length;
         spin_unlock(&imgsensor_drv_lock);
+    }
     set_dummy();
 }    /*    set_max_framerate  */
 
@@ -1220,7 +1221,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
     kal_uint8 retry = 2;
     kal_uint8 flag = 0;
     flag = read_vendor_id_ov02b();
-    if (1 == flag){
+    if (0 == flag){
         pr_err("%s %d ov02b_i match vendor id failed\n",__func__, __LINE__);
         return ERROR_SENSOR_CONNECT_FAIL;
         }
@@ -1939,7 +1940,7 @@ static struct SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 OV_OV02B_II_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
+UINT32 OV_ov02b_ii_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc!=NULL)

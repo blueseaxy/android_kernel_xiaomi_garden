@@ -2,7 +2,7 @@
  *
  * Filename:
  * ---------
- *     gc_gc02m1_ii_Sensor.c
+ *     gc_gc02m10_ii_Sensor.c
  *
  * Project:
  * --------
@@ -37,7 +37,7 @@
 
 /************************** Modify Following Strings for Debug **************************/
 #define PFX "gc02m10_camera_sensor"
-#define LOG_1 LOG_INF("GC02M1, MIPI 1LANE\n")
+#define LOG_1 LOG_INF("gc02m10, MIPI 1LANE\n")
 /****************************   Modify end    *******************************************/
 
 #define LOG_INF(format, args...)    pr_debug(PFX "[%s] " format, __func__, ##args)
@@ -48,7 +48,7 @@
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
 static struct imgsensor_info_struct imgsensor_info = {
-	.sensor_id = GC02M10_SENSOR_ID,
+	.sensor_id = gc02m10_SENSOR_ID,
 	.checksum_value = 0xf7375923,
 	.pre = {
 		.pclk = 84000000,
@@ -195,7 +195,7 @@ static struct SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[6] = {
 #define I2C_BUFFER_LEN    2
 #endif
 
-static kal_uint16 gc02m1_table_write_cmos_sensor(kal_uint16 *para, kal_uint32 len)
+static kal_uint16 gc02m10_table_write_cmos_sensor(kal_uint16 *para, kal_uint32 len)
 {
 	char puSendCmd[I2C_BUFFER_LEN];
 	kal_uint32 tosend, IDX;
@@ -375,10 +375,11 @@ static kal_uint16 gain2reg(const kal_uint16 gain)
 {
 	kal_uint16 reg_gain = gain << 4;
 
-	if (reg_gain < GC02M1_SENSOR_GAIN_BASE)
-		reg_gain = GC02M1_SENSOR_GAIN_BASE;
-	else if (reg_gain > GC02M1_SENSOR_GAIN_MAX)
-		reg_gain = GC02M1_SENSOR_GAIN_MAX;
+	if (reg_gain < gc02m10_SENSOR_GAIN_BASE)
+		reg_gain = gc02m10_SENSOR_GAIN_BASE;
+	else if (reg_gain > gc02m10_SENSOR_GAIN_MAX)
+		reg_gain = gc02m10_SENSOR_GAIN_MAX;
+
 	return (kal_uint16)reg_gain;
 }
 
@@ -387,7 +388,7 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	kal_uint16 reg_gain;
 	kal_uint32 temp_gain;
 	kal_int16 gain_index;
-	kal_uint16 GC02M1_AGC_Param[GC02M1_SENSOR_GAIN_MAX_VALID_INDEX][2] = {
+	kal_uint16 gc02m10_AGC_Param[gc02m10_SENSOR_GAIN_MAX_VALID_INDEX][2] = {
 		{  1024,  0 },
 		{  1536,  1 },
 		{  2035,  2 },
@@ -408,17 +409,17 @@ static kal_uint16 set_gain(kal_uint16 gain)
 
 	reg_gain = gain2reg(gain);
 
-	for (gain_index = GC02M1_SENSOR_GAIN_MAX_VALID_INDEX - 1; gain_index >= 0; gain_index--)
-		if (reg_gain >= GC02M1_AGC_Param[gain_index][0])
+	for (gain_index = gc02m10_SENSOR_GAIN_MAX_VALID_INDEX - 1; gain_index >= 0; gain_index--)
+		if (reg_gain >= gc02m10_AGC_Param[gain_index][0])
 			break;
 
 	write_cmos_sensor(0xfe, 0x00);
-	write_cmos_sensor(0xb6, GC02M1_AGC_Param[gain_index][1]);
-	temp_gain = reg_gain * GC02M1_SENSOR_DGAIN_BASE / GC02M1_AGC_Param[gain_index][0];
+	write_cmos_sensor(0xb6, gc02m10_AGC_Param[gain_index][1]);
+	temp_gain = reg_gain * gc02m10_SENSOR_DGAIN_BASE / gc02m10_AGC_Param[gain_index][0];
 	write_cmos_sensor(0xb1, (temp_gain >> 8) & 0x1f);
 	write_cmos_sensor(0xb2, temp_gain & 0xff);
-	LOG_INF("GC02M1_AGC_Param[gain_index][1] = 0x%x, temp_gain = 0x%x, reg_gain = %d\n",
-		GC02M1_AGC_Param[gain_index][1], temp_gain, reg_gain);
+	LOG_INF("gc02m10_AGC_Param[gain_index][1] = 0x%x, temp_gain = 0x%x, reg_gain = %d\n",
+		gc02m10_AGC_Param[gain_index][1], temp_gain, reg_gain);
 
 	return reg_gain;
 }
@@ -480,7 +481,7 @@ kal_uint16 addr_data_pair_init_gc02m10[] = {
 	0x0a, 0x02,
 	0x0d, 0x04,
 	0x0e, 0xbc,
-	0x17, GC02M1_MIRROR,
+	0x17, gc02m10_MIRROR,
 	0x19, 0x04,
 	0x24, 0x00,
 	0x56, 0x20,
@@ -705,7 +706,7 @@ static void sensor_init(void)
 {
 	LOG_INF("E\n");
 
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_init_gc02m10,
 		sizeof(addr_data_pair_init_gc02m10) /
 		sizeof(kal_uint16));
@@ -714,7 +715,7 @@ static void sensor_init(void)
 static void preview_setting(void)
 {
 	LOG_INF("E\n");
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_preview_gc02m10,
 		sizeof(addr_data_pair_preview_gc02m10) /
 		sizeof(kal_uint16));
@@ -723,7 +724,7 @@ static void preview_setting(void)
 static void capture_setting(void)
 {
 	LOG_INF("E\n");
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_capture_gc02m10,
 		sizeof(addr_data_pair_capture_gc02m10) /
 		sizeof(kal_uint16));
@@ -732,7 +733,7 @@ static void capture_setting(void)
 static void normal_video_setting(void)
 {
 	LOG_INF("E\n");
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_normal_video_gc02m10,
 		sizeof(addr_data_pair_normal_video_gc02m10) /
 		sizeof(kal_uint16));
@@ -741,7 +742,7 @@ static void normal_video_setting(void)
 static void hs_video_setting(void)
 {
 	LOG_INF("E\n");
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_hs_video_gc02m10,
 		sizeof(addr_data_pair_hs_video_gc02m10) /
 		sizeof(kal_uint16));
@@ -750,7 +751,7 @@ static void hs_video_setting(void)
 static void slim_video_setting(void)
 {
 	LOG_INF("E\n");
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_slim_video_gc02m10,
 		sizeof(addr_data_pair_slim_video_gc02m10) /
 		sizeof(kal_uint16));
@@ -758,7 +759,7 @@ static void slim_video_setting(void)
 
 static void custom1_setting(void)
 {
-	gc02m1_table_write_cmos_sensor(
+	gc02m10_table_write_cmos_sensor(
 		addr_data_pair_custom1_gc02m10,
 		sizeof(addr_data_pair_custom1_gc02m10) /
 		sizeof(kal_uint16));
@@ -868,7 +869,7 @@ static kal_uint32 close(void)
 static kal_uint32 preview(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	MSDK_SENSOR_CONFIG_STRUCT *sensor_config_data)
 {
-    pr_info("[gc02m1] preview mode start\n");
+    pr_info("[gc02m10] preview mode start\n");
 	spin_lock(&imgsensor_drv_lock);
 	imgsensor.sensor_mode = IMGSENSOR_MODE_PREVIEW;
 	imgsensor.pclk = imgsensor_info.pre.pclk;
@@ -885,7 +886,7 @@ static kal_uint32 preview(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 static kal_uint32 capture(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	MSDK_SENSOR_CONFIG_STRUCT *sensor_config_data)
 {
-    pr_info("[gc02m1] capture mode start\n");
+    pr_info("[gc02m10] capture mode start\n");
 	spin_lock(&imgsensor_drv_lock);
 	imgsensor.sensor_mode = IMGSENSOR_MODE_CAPTURE;
 	if (imgsensor.current_fps == imgsensor_info.cap1.max_framerate) {
@@ -962,7 +963,7 @@ static kal_uint32 slim_video(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 static kal_uint32 custom1(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	MSDK_SENSOR_CONFIG_STRUCT *sensor_config_data)
 {
-	pr_info("[gc02m1] custom1 mode start\n");
+	pr_info("[gc02m10] custom1 mode start\n");
 	spin_lock(&imgsensor_drv_lock);
 	imgsensor.sensor_mode = IMGSENSOR_MODE_CUSTOM1;
 	imgsensor.pclk = imgsensor_info.custom1.pclk;
@@ -1475,7 +1476,7 @@ static struct SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 GC_GC02M10_II_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
+UINT32 GC_gc02m10_II_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc != NULL)

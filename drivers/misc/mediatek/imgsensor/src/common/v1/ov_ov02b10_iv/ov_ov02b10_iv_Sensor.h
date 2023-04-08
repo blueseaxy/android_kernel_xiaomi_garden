@@ -13,8 +13,8 @@
  *     CMOS sensor header file
  *
  ****************************************************************************/
-#ifndef __OV02BMIPI_SENSOR_H__
-#define __OV02BMIPI_SENSOR_H__
+#ifndef __OV02B10MIPI_SENSOR_H__
+#define __OV02B10MIPI_SENSOR_H__
 
 #include "kd_camera_typedef.h"
 #include "kd_imgsensor.h"

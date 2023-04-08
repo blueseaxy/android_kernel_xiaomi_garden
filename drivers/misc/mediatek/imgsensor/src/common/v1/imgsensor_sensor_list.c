@@ -45,6 +45,11 @@ struct IMGSENSOR_INIT_FUNC_LIST kdSensorList[MAX_NUM_OF_SUPPORT_SENSOR] = {
         SENSOR_DRVNAME_HYNIX_HI1337_IIII,
         HYNIX_HI1337_IIII_SensorInit},
 #endif
+#if defined(HYNIX_HI556_I)
+        {HYNIX_HI556_I_SENSOR_ID,
+        SENSOR_DRVNAME_HYNIX_HI556_I,
+        HYNIX_HI556_I_SensorInit},
+#endif
 #if defined(GC_GC5035_I)
         {GC_GC5035_I_SENSOR_ID,
         SENSOR_DRVNAME_GC_GC5035_I,

@@ -240,10 +240,10 @@ static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
         imgsensor.frame_length = imgsensor_info.max_frame_length;
         imgsensor.dummy_line = imgsensor.frame_length - imgsensor.min_frame_length;
     }
-    if (min_framelength_en)
+    if (min_framelength_en) {
         imgsensor.min_frame_length = imgsensor.frame_length;
         spin_unlock(&imgsensor_drv_lock);
-
+    }
     set_dummy();
 }    /*    set_max_framerate  */
 
@@ -1940,7 +1940,7 @@ static struct SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 OV_OV02B_III_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
+UINT32 OV_ov02b10_iv_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc!=NULL)

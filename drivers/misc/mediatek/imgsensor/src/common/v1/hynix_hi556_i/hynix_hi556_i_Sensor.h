@@ -10,21 +10,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
-/*****************************************************************************
- *
- * Filename:
- * ---------
- *	 hi556mipi_Sensor.h
- *
- * Project:
- * --------
- *	 ALPS
- *
- * Description:
- * ------------
- *	 CMOS sensor header file
- *
- ****************************************************************************/
 #ifndef _HYNIX_HI556_I_SENSOR_H
 #define _HYNIX_HI556_I_SENSOR_H
 

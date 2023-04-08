@@ -2270,11 +2270,10 @@ static struct SENSOR_FUNCTION_STRUCT sensor_func = {
 	close
 };
 
-UINT32 HI556_MIPI_RAW_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
+UINT32 HYNIX_HI556_I_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 {
 	/* To Do : Check Sensor status here */
 	if (pfFunc != NULL)
 		*pfFunc =  &sensor_func;
 	return ERROR_NONE;
-}	/*	HI556_MIPI_RAW_SensorInit	*/
-
+}	/*	HYNIX_HI556_I_SensorInit	*/
