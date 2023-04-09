@@ -25,9 +25,9 @@
 #include "hynix_hi1337_ii_Sensor.h"
 
 #define PFX "hi1337_camera_sensor"
-#define LOG_INF(format, args...)    \
-	pr_devel(PFX "[%s] " format, __func__, ##args)
-
+/*#define LOG_INF(format, args...)    \
+	pr_debug(PFX "[%s] " format, __func__, ##args) */
+#define LOG_INF(format, args...)
 //PDAF
 #define ENABLE_PDAF 1
 #define e2prom 0
@@ -2974,9 +2974,10 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
     kal_uint8 i = 0;
     kal_uint8 retry = 2;
     int  flag = 0;
+	
     flag = hi1337_vendor_id_read(0x01);
     if( flag != HI1337_VENDOR_ID) {
-        pr_info("hynix_hi1337_I match vendor id fail, reead vendor id is: 0x%x,expect vendor id is 0x42 \n", flag);
+        pr_info("hynix_hi1337_II match vendor id fail, reead vendor id is: 0x%x,expect vendor id is 0x42 \n", flag);
         return ERROR_SENSOR_CONNECT_FAIL;
     }else{
         hi1337_fusion_id_read();

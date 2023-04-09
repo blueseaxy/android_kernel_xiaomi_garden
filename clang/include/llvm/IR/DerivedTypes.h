@@ -1,9 +1,8 @@
 //===- llvm/DerivedTypes.h - Classes for handling data types ----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -36,7 +35,7 @@ class LLVMContext;
 /// Class to represent integer types. Note that this class is also used to
 /// represent the built-in integer types: Int1Ty, Int8Ty, Int16Ty, Int32Ty and
 /// Int64Ty.
-/// @brief Integer representation type
+/// Integer representation type
 class IntegerType : public Type {
   friend class LLVMContextImpl;
 
@@ -59,10 +58,10 @@ public:
   /// If an IntegerType with the same NumBits value was previously instantiated,
   /// that instance will be returned. Otherwise a new one will be created. Only
   /// one instance with a given NumBits value is ever created.
-  /// @brief Get or create an IntegerType instance.
+  /// Get or create an IntegerType instance.
   static IntegerType *get(LLVMContext &C, unsigned NumBits);
 
-  /// @brief Get the number of bits in this IntegerType
+  /// Get the number of bits in this IntegerType
   unsigned getBitWidth() const { return getSubclassData(); }
 
   /// Return a bitmask with ones set for all of the bits that can be set by an
@@ -79,13 +78,13 @@ public:
 
   /// For example, this is 0xFF for an 8 bit integer, 0xFFFF for i16, etc.
   /// @returns a bit mask with ones set for all the bits of this type.
-  /// @brief Get a bit mask for this type.
+  /// Get a bit mask for this type.
   APInt getMask() const;
 
   /// This method determines if the width of this IntegerType is a power-of-2
   /// in terms of 8 bit bytes.
   /// @returns true if this is a power-of-2 byte width.
-  /// @brief Is this a power-of-2 byte-width IntegerType ?
+  /// Is this a power-of-2 byte-width IntegerType ?
   bool isPowerOf2ByteWidth() const;
 
   /// Methods for support type inquiry through isa, cast, and dyn_cast.
@@ -158,6 +157,38 @@ unsigned Type::getFunctionNumParams() const {
   return cast<FunctionType>(this)->getNumParams();
 }
 
+/// A handy container for a FunctionType+Callee-pointer pair, which can be
+/// passed around as a single entity. This assists in replacing the use of
+/// PointerType::getElementType() to access the function's type, since that's
+/// slated for removal as part of the [opaque pointer types] project.
+class FunctionCallee {
+public:
+  // Allow implicit conversion from types which have a getFunctionType member
+  // (e.g. Function and InlineAsm).
+  template <typename T, typename U = decltype(&T::getFunctionType)>
+  FunctionCallee(T *Fn)
+      : FnTy(Fn ? Fn->getFunctionType() : nullptr), Callee(Fn) {}
+
+  FunctionCallee(FunctionType *FnTy, Value *Callee)
+      : FnTy(FnTy), Callee(Callee) {
+    assert((FnTy == nullptr) == (Callee == nullptr));
+  }
+
+  FunctionCallee(std::nullptr_t) {}
+
+  FunctionCallee() = default;
+
+  FunctionType *getFunctionType() { return FnTy; }
+
+  Value *getCallee() { return Callee; }
+
+  explicit operator bool() { return Callee; }
+
+private:
+  FunctionType *FnTy = nullptr;
+  Value *Callee = nullptr;
+};
+
 /// Common super class of ArrayType, StructType and VectorType.
 class CompositeType : public Type {
 protected:
@@ -193,7 +224,7 @@ public:
 /// StructType::create() forms.
 ///
 /// Independent of what kind of struct you have, the body of a struct type are
-/// laid out in memory consequtively with the elements directly one after the
+/// laid out in memory consecutively with the elements directly one after the
 /// other (if the struct is packed) or (if not packed) with padding between the
 /// elements as defined by DataLayout (which is required to match what the code
 /// generator for a target expects).

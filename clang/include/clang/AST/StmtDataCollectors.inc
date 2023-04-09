@@ -118,8 +118,8 @@ DEF_ADD_DATA(FloatingLiteral, {
 )
 DEF_ADD_DATA(GenericSelectionExpr, {
 
-    for (unsigned i = 0; i < S->getNumAssocs(); ++i) {
-      addData(S->getAssocType(i));
+    for (const GenericSelectionExpr::ConstAssociation &Assoc : S->associations()) {
+      addData(Assoc.getType());
     }
   }
 )
@@ -188,7 +188,7 @@ DEF_ADD_DATA(ObjCPropertyRefExpr, {
 )
 DEF_ADD_DATA(PredefinedExpr, {
 
-    addData(S->getIdentType());
+    addData(S->getIdentKind());
   }
 )
 DEF_ADD_DATA(Stmt, {
@@ -196,8 +196,8 @@ DEF_ADD_DATA(Stmt, {
     addData(S->getStmtClass());
     // This ensures that non-macro-generated code isn't identical to
     // macro-generated code.
-    addData(data_collection::getMacroStack(S->getLocStart(), Context));
-    addData(data_collection::getMacroStack(S->getLocEnd(), Context));
+    addData(data_collection::getMacroStack(S->getBeginLoc(), Context));
+    addData(data_collection::getMacroStack(S->getEndLoc(), Context));
   }
 )
 DEF_ADD_DATA(StringLiteral, {

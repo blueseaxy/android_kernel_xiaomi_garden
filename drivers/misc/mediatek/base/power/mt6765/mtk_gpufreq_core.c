@@ -140,8 +140,8 @@ GPUOP(SEG2_GPU_DVFS_FREQ2, SEG2_GPU_DVFS_VOLT2, SEG2_GPU_DVFS_VSRAM2, 2),
 };
 static struct g_opp_table_info g_opp_table_segment3[] = {
 GPUOP(SEG3_GPU_DVFS_FREQ0, SEG3_GPU_DVFS_VOLT0, SEG3_GPU_DVFS_VSRAM0, 0),
-GPUOP(SEG3_GPU_DVFS_FREQ1, SEG3_GPU_DVFS_VOLT1, SEG3_GPU_DVFS_VSRAM1, 1),
-GPUOP(SEG3_GPU_DVFS_FREQ2, SEG3_GPU_DVFS_VOLT2, SEG3_GPU_DVFS_VSRAM2, 2),
+/*GPUOP(SEG3_GPU_DVFS_FREQ1, SEG3_GPU_DVFS_VOLT1, SEG3_GPU_DVFS_VSRAM1, 1),
+GPUOP(SEG3_GPU_DVFS_FREQ2, SEG3_GPU_DVFS_VOLT2, SEG3_GPU_DVFS_VSRAM2, 2),*/
 };
 static struct g_opp_table_info g_opp_table_segment4[] = {
 GPUOP(SEG4_GPU_DVFS_FREQ0, SEG4_GPU_DVFS_VOLT0, SEG4_GPU_DVFS_VSRAM0, 0),
@@ -536,7 +536,7 @@ mt_gpufreq_update_volt(unsigned int pmic_volt[], unsigned int array_size)
 	g_cur_opp_vsram_volt = g_opp_table[g_cur_opp_cond_idx].gpufreq_vsram;
 
 	mutex_unlock(&mt_gpufreq_lock);
-
+       __mt_gpufreq_bucks_disable();
 	return 0;
 }
 
@@ -619,7 +619,7 @@ unsigned int mt_gpufreq_get_thermal_limit_index(void)
 {
 	gpufreq_pr_debug("@%s: current GPU Thermal/Power/PBM limit index is %d\n",
 			__func__, g_max_limited_idx);
-	return g_max_limited_idx;
+	return 0;
 }
 
 /*
@@ -630,7 +630,9 @@ unsigned int mt_gpufreq_get_thermal_limit_freq(void)
 	gpufreq_pr_debug("@%s: current GPU thermal limit freq is %d MHz\n",
 			__func__,
 			g_opp_table[g_max_limited_idx].gpufreq_khz / 1000);
-	return g_opp_table[g_max_limited_idx].gpufreq_khz;
+/*        __mt_gpufreq_bucks_disable();
+	return g_opp_table[g_max_limited_idx].gpufreq_khz;*/
+              return 0;
 }
 EXPORT_SYMBOL(mt_gpufreq_get_thermal_limit_freq);
 
@@ -2538,12 +2540,12 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	/* set VSRAM_GPU */
 #ifdef USE_STAND_ALONE_VSRAM
 	regulator_set_voltage(g_pmic->reg_vsram_gpu,
-		VSRAM_GPU_MAX_VOLT * 10, VSRAM_GPU_MAX_VOLT * 10 + 125);
+		VSRAM_GPU_MAX_VOLT * 15, VSRAM_GPU_MAX_VOLT * 15 + 125);
 #endif
 	/* set VGPU */
 #ifdef USE_STAND_ALONE_VGPU
-	regulator_set_voltage(g_pmic->reg_vgpu, VGPU_MAX_VOLT * 10,
-		VGPU_MAX_VOLT * 10 + 125);
+	regulator_set_voltage(g_pmic->reg_vgpu, VGPU_MAX_VOLT * 15,
+		VGPU_MAX_VOLT * 15 + 125);
 #endif
 
 	/* enable bucks (VGPU && VSRAM_GPU) enforcement */
@@ -2601,7 +2603,7 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 		LOW_BATTERY_PRIO_GPU);
 #endif /* ifdef MT_GPUFREQ_LOW_BATT_VOLT_PROTECT */
 
-#ifdef MT_GPUFREQ_BATT_PERCENT_PROTECT
+/*#ifdef MT_GPUFREQ_BATT_PERCENT_PROTECT
 	g_batt_percent_limited_idx_lv_0 = 0;
 	for (i = 0; i < g_opp_idx_num; i++) {
 		g_batt_percent_limited_idx_lv_1 = 0;
@@ -2613,9 +2615,9 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	}
 	register_battery_percent_notify(&mt_gpufreq_batt_percent_callback,
 		BATTERY_PERCENT_PRIO_GPU);
-#endif /* ifdef MT_GPUFREQ_BATT_PERCENT_PROTECT */
+#endif  ifdef MT_GPUFREQ_BATT_PERCENT_PROTECT */
 
-#ifdef MT_GPUFREQ_BATT_OC_PROTECT
+/*#ifdef MT_GPUFREQ_BATT_OC_PROTECT
 	g_batt_oc_limited_idx_lvl_0 = 0;
 	for (i = 0; i < g_opp_idx_num; i++) {
 		if (g_opp_table[i].gpufreq_khz <=
@@ -2626,7 +2628,7 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	}
 	register_battery_oc_notify(&mt_gpufreq_batt_oc_callback,
 		BATTERY_OC_PRIO_GPU);
-#endif /* ifdef MT_GPUFREQ_BATT_OC_PROTECT */
+#endif  ifdef MT_GPUFREQ_BATT_OC_PROTECT */
 
 
 	pr_info(

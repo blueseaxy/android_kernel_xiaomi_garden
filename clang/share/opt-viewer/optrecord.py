@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 
 from __future__ import print_function
 
@@ -24,12 +24,9 @@ try:
 except:
     pass
 
+import re
+
 import optpmap
-
-
-p = subprocess.Popen(['c++filt', '-n'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-p_lock = Lock()
-
 
 try:
     dict.iteritems
@@ -47,13 +44,6 @@ else:
         return d.iteritems()
 
 
-def demangle(name):
-    with p_lock:
-        p.stdin.write((name + '\n').encode('utf-8'))
-        p.stdin.flush()
-        return p.stdout.readline().rstrip().decode('utf-8')
-
-
 def html_file_name(filename):
     return filename.replace('/', '_').replace('#', '_') + ".html"
 
@@ -66,6 +56,21 @@ class Remark(yaml.YAMLObject):
     # Work-around for http://pyyaml.org/ticket/154.
     yaml_loader = Loader
 
+    default_demangler = 'c++filt -n'
+    demangler_proc = None
+
+    @classmethod
+    def set_demangler(cls, demangler):
+        cls.demangler_proc = subprocess.Popen(demangler.split(), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        cls.demangler_lock = Lock()
+
+    @classmethod
+    def demangle(cls, name):
+        with cls.demangler_lock:
+            cls.demangler_proc.stdin.write((name + '\n').encode('utf-8'))
+            cls.demangler_proc.stdin.flush()
+            return cls.demangler_proc.stdout.readline().rstrip().decode('utf-8')
+
     # Intern all strings since we have lot of duplication across filenames,
     # remark text.
     #
@@ -76,7 +81,11 @@ class Remark(yaml.YAMLObject):
     def _reduce_memory(self):
         self.Pass = intern(self.Pass)
         self.Name = intern(self.Name)
-        self.Function = intern(self.Function)
+        try:
+            # Can't intern unicode strings.
+            self.Function = intern(self.Function)
+        except:
+            pass
 
         def _reduce_memory_dict(old_dict):
             new_dict = dict()
@@ -133,7 +142,7 @@ class Remark(yaml.YAMLObject):
 
     @property
     def DemangledFunctionName(self):
-        return demangle(self.Function)
+        return self.demangle(self.Function)
 
     @property
     def Link(self):
@@ -148,15 +157,41 @@ class Remark(yaml.YAMLObject):
         assert(len(mapping) == 1)
         (key, value) = list(mapping.items())[0]
 
-        if key == 'Caller' or key == 'Callee':
-            value = cgi.escape(demangle(value))
+        if key == 'Caller' or key == 'Callee' or key == 'DirectCallee':
+            value = cgi.escape(self.demangle(value))
 
         if dl and key != 'Caller':
             dl_dict = dict(list(dl))
-            return "<a href={}>{}</a>".format(
+            return u"<a href={}>{}</a>".format(
                 make_link(dl_dict['File'], dl_dict['Line']), value)
         else:
             return value
+
+    # Return a cached dictionary for the arguments.  The key for each entry is
+    # the argument key (e.g. 'Callee' for inlining remarks.  The value is a
+    # list containing the value (e.g. for 'Callee' the function) and
+    # optionally a DebugLoc.
+    def getArgDict(self):
+        if hasattr(self, 'ArgDict'):
+            return self.ArgDict
+        self.ArgDict = {}
+        for arg in self.Args:
+            if len(arg) == 2:
+                if arg[0][0] == 'DebugLoc':
+                    dbgidx = 0
+                else:
+                    assert(arg[1][0] == 'DebugLoc')
+                    dbgidx = 1
+
+                key = arg[1 - dbgidx][0]
+                entry = (arg[1 - dbgidx][1], arg[dbgidx][1])
+            else:
+                arg = arg[0]
+                key = arg[0]
+                entry = (arg[1], )
+
+            self.ArgDict[key] = entry
+        return self.ArgDict
 
     def getDiffPrefix(self):
         if hasattr(self, 'Added'):
@@ -230,18 +265,24 @@ class Missed(Remark):
         return "red"
 
 
-def get_remarks(input_file):
+def get_remarks(input_file, filter_):
     max_hotness = 0
     all_remarks = dict()
     file_remarks = defaultdict(functools.partial(defaultdict, list))
 
     with open(input_file) as f:
         docs = yaml.load_all(f, Loader=Loader)
+
+        filter_e = re.compile(filter_)
         for remark in docs:
             remark.canonicalize()
             # Avoid remarks withoug debug location or if they are duplicated
             if not hasattr(remark, 'DebugLoc') or remark.key in all_remarks:
                 continue
+
+            if filter_ and not filter_e.search(remark.Pass):
+                continue
+
             all_remarks[remark.key] = remark
 
             file_remarks[remark.File][remark.Line].append(remark)
@@ -256,11 +297,13 @@ def get_remarks(input_file):
     return max_hotness, all_remarks, file_remarks
 
 
-def gather_results(filenames, num_jobs, should_print_progress):
+def gather_results(filenames, num_jobs, should_print_progress, filter_):
     if should_print_progress:
         print('Reading YAML files...')
+    if not Remark.demangler_proc:
+        Remark.set_demangler(Remark.default_demangler)
     remarks = optpmap.pmap(
-        get_remarks, filenames, num_jobs, should_print_progress)
+        get_remarks, filenames, num_jobs, should_print_progress, filter_)
     max_hotness = max(entry[0] for entry in remarks)
 
     def merge_file_remarks(file_remarks_job, all_remarks, merged):
@@ -293,6 +336,6 @@ def find_opt_files(*dirs_or_files):
                 subdirs[:] = [d for d in subdirs
                               if not os.path.ismount(os.path.join(dir, d))]
                 for file in files:
-                    if fnmatch.fnmatch(file, "*.opt.yaml"):
+                    if fnmatch.fnmatch(file, "*.opt.yaml*"):
                         all.append(os.path.join(dir, file))
     return all

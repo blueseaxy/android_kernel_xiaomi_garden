@@ -1,9 +1,8 @@
 //===--- RefactoringRuleContext.h - Clang refactoring library -------------===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,6 +11,7 @@
 
 #include "clang/Basic/DiagnosticError.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Tooling/Refactoring/ASTSelection.h"
 
 namespace clang {
 
@@ -62,6 +62,10 @@ public:
     return createDiagnosticError(SourceLocation(), DiagID);
   }
 
+  void setASTSelection(std::unique_ptr<SelectedASTNode> Node) {
+    ASTNodeSelection = std::move(Node);
+  }
+
 private:
   /// The source manager for the translation unit / file on which a refactoring
   /// action might operate on.
@@ -74,6 +78,9 @@ private:
   ASTContext *AST = nullptr;
   /// The allocator for diagnostics.
   PartialDiagnostic::StorageAllocator DiagStorage;
+
+  // FIXME: Remove when memoized.
+  std::unique_ptr<SelectedASTNode> ASTNodeSelection;
 };
 
 } // end namespace tooling

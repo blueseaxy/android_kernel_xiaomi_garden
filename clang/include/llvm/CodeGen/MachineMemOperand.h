@@ -1,9 +1,8 @@
 //==- llvm/CodeGen/MachineMemOperand.h - MachineMemOperand class -*- C++ -*-==//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -47,17 +46,40 @@ struct MachinePointerInfo {
 
   uint8_t StackID;
 
-  explicit MachinePointerInfo(const Value *v = nullptr, int64_t offset = 0,
-                              uint8_t ID = 0)
-    : V(v), Offset(offset), StackID(ID) {}
+  unsigned AddrSpace = 0;
 
-  explicit MachinePointerInfo(const PseudoSourceValue *v,
-                              int64_t offset = 0,
+  explicit MachinePointerInfo(const Value *v, int64_t offset = 0,
                               uint8_t ID = 0)
-    : V(v), Offset(offset), StackID(ID) {}
+      : V(v), Offset(offset), StackID(ID) {
+    AddrSpace = v ? v->getType()->getPointerAddressSpace() : 0;
+  }
+
+  explicit MachinePointerInfo(const PseudoSourceValue *v, int64_t offset = 0,
+                              uint8_t ID = 0)
+      : V(v), Offset(offset), StackID(ID) {
+    AddrSpace = v ? v->getAddressSpace() : 0;
+  }
+
+  explicit MachinePointerInfo(unsigned AddressSpace = 0)
+      : V((const Value *)nullptr), Offset(0), StackID(0),
+        AddrSpace(AddressSpace) {}
+
+  explicit MachinePointerInfo(
+    PointerUnion<const Value *, const PseudoSourceValue *> v,
+    int64_t offset = 0,
+    uint8_t ID = 0)
+    : V(v), Offset(offset), StackID(ID) {
+    if (V) {
+      if (const auto *ValPtr = V.dyn_cast<const Value*>())
+        AddrSpace = ValPtr->getType()->getPointerAddressSpace();
+      else
+        AddrSpace = V.get<const PseudoSourceValue*>()->getAddressSpace();
+    }
+  }
 
   MachinePointerInfo getWithOffset(int64_t O) const {
-    if (V.isNull()) return MachinePointerInfo();
+    if (V.isNull())
+      return MachinePointerInfo(AddrSpace);
     if (V.is<const Value*>())
       return MachinePointerInfo(V.get<const Value*>(), Offset+O, StackID);
     return MachinePointerInfo(V.get<const PseudoSourceValue*>(), Offset+O,
@@ -89,6 +111,9 @@ struct MachinePointerInfo {
   /// Stack pointer relative access.
   static MachinePointerInfo getStack(MachineFunction &MF, int64_t Offset,
                                      uint8_t ID = 0);
+
+  /// Stack memory without other information.
+  static MachinePointerInfo getUnknownStack(MachineFunction &MF);
 };
 
 
@@ -158,7 +183,7 @@ public:
   /// atomic operations the atomic ordering requirements when store does not
   /// occur must also be specified.
   MachineMemOperand(MachinePointerInfo PtrInfo, Flags flags, uint64_t s,
-                    unsigned base_alignment,
+                    uint64_t a,
                     const AAMDNodes &AAInfo = AAMDNodes(),
                     const MDNode *Ranges = nullptr,
                     SyncScope::ID SSID = SyncScope::System,
@@ -241,13 +266,13 @@ public:
   bool isAtomic() const { return getOrdering() != AtomicOrdering::NotAtomic; }
 
   /// Returns true if this memory operation doesn't have any ordering
-  /// constraints other than normal aliasing. Volatile and atomic memory
-  /// operations can't be reordered.
-  ///
-  /// Currently, we don't model the difference between volatile and atomic
-  /// operations. They should retain their ordering relative to all memory
-  /// operations.
-  bool isUnordered() const { return !isVolatile(); }
+  /// constraints other than normal aliasing. Volatile and (ordered) atomic
+  /// memory operations can't be reordered. 
+  bool isUnordered() const {
+    return (getOrdering() == AtomicOrdering::NotAtomic ||
+            getOrdering() == AtomicOrdering::Unordered) &&
+           !isVolatile();
+  }
 
   /// Update this MachineMemOperand to reflect the alignment of MMO, if it has a
   /// greater alignment. This must only be used when the new alignment applies
@@ -269,6 +294,9 @@ public:
   /// @{
   void print(raw_ostream &OS) const;
   void print(raw_ostream &OS, ModuleSlotTracker &MST) const;
+  void print(raw_ostream &OS, ModuleSlotTracker &MST,
+             SmallVectorImpl<StringRef> &SSNs, const LLVMContext &Context,
+             const MachineFrameInfo *MFI, const TargetInstrInfo *TII) const;
   /// @}
 
   friend bool operator==(const MachineMemOperand &LHS,

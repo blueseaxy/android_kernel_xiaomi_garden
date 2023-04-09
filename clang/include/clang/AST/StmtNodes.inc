@@ -501,12 +501,6 @@ DESIGNATEDINITEXPR(DesignatedInitExpr, Expr)
 DESIGNATEDINITUPDATEEXPR(DesignatedInitUpdateExpr, Expr)
 #undef DESIGNATEDINITUPDATEEXPR
 
-#ifndef EXPRWITHCLEANUPS
-#  define EXPRWITHCLEANUPS(Type, Base) EXPR(Type, Base)
-#endif
-EXPRWITHCLEANUPS(ExprWithCleanups, Expr)
-#undef EXPRWITHCLEANUPS
-
 #ifndef EXPRESSIONTRAITEXPR
 #  define EXPRESSIONTRAITEXPR(Type, Base) EXPR(Type, Base)
 #endif
@@ -519,11 +513,37 @@ EXPRESSIONTRAITEXPR(ExpressionTraitExpr, Expr)
 EXTVECTORELEMENTEXPR(ExtVectorElementExpr, Expr)
 #undef EXTVECTORELEMENTEXPR
 
+#ifndef FIXEDPOINTLITERAL
+#  define FIXEDPOINTLITERAL(Type, Base) EXPR(Type, Base)
+#endif
+FIXEDPOINTLITERAL(FixedPointLiteral, Expr)
+#undef FIXEDPOINTLITERAL
+
 #ifndef FLOATINGLITERAL
 #  define FLOATINGLITERAL(Type, Base) EXPR(Type, Base)
 #endif
 FLOATINGLITERAL(FloatingLiteral, Expr)
 #undef FLOATINGLITERAL
+
+#ifndef FULLEXPR
+#  define FULLEXPR(Type, Base) EXPR(Type, Base)
+#endif
+ABSTRACT_STMT(FULLEXPR(FullExpr, Expr))
+#ifndef CONSTANTEXPR
+#  define CONSTANTEXPR(Type, Base) FULLEXPR(Type, Base)
+#endif
+CONSTANTEXPR(ConstantExpr, FullExpr)
+#undef CONSTANTEXPR
+
+#ifndef EXPRWITHCLEANUPS
+#  define EXPRWITHCLEANUPS(Type, Base) FULLEXPR(Type, Base)
+#endif
+EXPRWITHCLEANUPS(ExprWithCleanups, FullExpr)
+#undef EXPRWITHCLEANUPS
+
+STMT_RANGE(FullExpr, ConstantExpr, ExprWithCleanups)
+
+#undef FULLEXPR
 
 #ifndef FUNCTIONPARMPACKEXPR
 #  define FUNCTIONPARMPACKEXPR(Type, Base) EXPR(Type, Base)

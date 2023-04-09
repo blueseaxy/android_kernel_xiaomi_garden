@@ -1,9 +1,8 @@
 //===- DIContext.h ----------------------------------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -17,6 +16,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Object/ObjectFile.h"
+#include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -26,12 +26,11 @@
 
 namespace llvm {
 
-class raw_ostream;
-
 /// A format-neutral container for source line information.
 struct DILineInfo {
   std::string FileName;
   std::string FunctionName;
+  Optional<StringRef> Source;
   uint32_t Line = 0;
   uint32_t Column = 0;
   uint32_t StartLine = 0;
@@ -46,14 +45,29 @@ struct DILineInfo {
            FileName == RHS.FileName && FunctionName == RHS.FunctionName &&
            StartLine == RHS.StartLine && Discriminator == RHS.Discriminator;
   }
+
   bool operator!=(const DILineInfo &RHS) const {
     return !(*this == RHS);
   }
+
   bool operator<(const DILineInfo &RHS) const {
     return std::tie(FileName, FunctionName, Line, Column, StartLine,
                     Discriminator) <
            std::tie(RHS.FileName, RHS.FunctionName, RHS.Line, RHS.Column,
                     RHS.StartLine, RHS.Discriminator);
+  }
+
+  explicit operator bool() const { return *this != DILineInfo(); }
+
+  void dump(raw_ostream &OS) {
+    OS << "Line info: ";
+    if (FileName != "<invalid>")
+      OS << "file '" << FileName << "', ";
+    if (FunctionName != "<invalid>")
+      OS << "function '" << FunctionName << "', ";
+    OS << "line " << Line << ", ";
+    OS << "column " << Column << ", ";
+    OS << "start line " << StartLine << '\n';
   }
 };
 
@@ -66,7 +80,7 @@ class DIInliningInfo {
 public:
   DIInliningInfo() = default;
 
-  DILineInfo getFrame(unsigned Index) const {
+  const DILineInfo & getFrame(unsigned Index) const {
     assert(Index < Frames.size());
     return Frames[Index];
   }
@@ -83,6 +97,11 @@ public:
   void addFrame(const DILineInfo &Frame) {
     Frames.push_back(Frame);
   }
+  
+  void resize(unsigned i) {
+    Frames.resize(i);
+  }
+  
 };
 
 /// Container for description of a global variable.
@@ -139,11 +158,15 @@ enum DIDumpType : unsigned {
 struct DIDumpOptions {
   unsigned DumpType = DIDT_All;
   unsigned RecurseDepth = -1U;
+  uint16_t Version = 0; // DWARF version to assume when extracting.
+  uint8_t AddrSize = 4; // Address byte size to assume when extracting.
+  bool ShowAddresses = true;
   bool ShowChildren = false;
   bool ShowParents = false;
   bool ShowForm = false;
   bool SummarizeTypes = false;
   bool Verbose = false;
+  bool DisplayRawContents = false;
 
   /// Return default option set for printing a single DIE without children.
   static DIDumpOptions getForSingleDIE() {

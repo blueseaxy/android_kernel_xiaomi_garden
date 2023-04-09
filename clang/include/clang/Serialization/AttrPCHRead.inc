@@ -7,6 +7,15 @@
 \*===----------------------------------------------------------------------===*/
 
   switch (Kind) {
+  case attr::AArch64VectorPcs: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) AArch64VectorPcsAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::AMDGPUFlatWorkGroupSize: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -135,6 +144,14 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::AddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    int addressSpace = Record.readInt();
+    New = new (Context) AddressSpaceAttr(Range, Context, addressSpace, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::Alias: {
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
@@ -179,7 +196,7 @@
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
-    int paramIndex = Record.readInt();
+    ParamIdx paramIndex = ParamIdx::deserialize(Record.readInt());
     New = new (Context) AllocAlignAttr(Range, Context, paramIndex, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
@@ -189,9 +206,18 @@
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
-    int elemSizeParam = Record.readInt();
-    int numElemsParam = Record.readInt();
+    ParamIdx elemSizeParam = ParamIdx::deserialize(Record.readInt());
+    ParamIdx numElemsParam = ParamIdx::deserialize(Record.readInt());
     New = new (Context) AllocSizeAttr(Range, Context, elemSizeParam, numElemsParam, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::AlwaysDestroy: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) AlwaysDestroyAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -242,6 +268,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::AnyX86NoCfCheck: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) AnyX86NoCfCheckAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::ArcWeakrefUnavailable: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -256,10 +291,19 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     IdentifierInfo * argumentKind = Record.getIdentifierInfo();
-    unsigned argumentIdx = Record.readInt();
-    unsigned typeTagIdx = Record.readInt();
+    ParamIdx argumentIdx = ParamIdx::deserialize(Record.readInt());
+    ParamIdx typeTagIdx = ParamIdx::deserialize(Record.readInt());
     bool isPointer = Record.readInt();
     New = new (Context) ArgumentWithTypeTagAttr(Range, Context, argumentKind, argumentIdx, typeTagIdx, isPointer, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::Artificial: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ArtificialAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -339,7 +383,8 @@
     std::string message= Record.readString();
     bool strict = Record.readInt();
     std::string replacement= Record.readString();
-    New = new (Context) AvailabilityAttr(Range, Context, platform, introduced, deprecated, obsoleted, unavailable, message, strict, replacement, Spelling);
+    int priority = Record.readInt();
+    New = new (Context) AvailabilityAttr(Range, Context, platform, introduced, deprecated, obsoleted, unavailable, message, strict, replacement, priority, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -413,6 +458,34 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) CFUnknownTransferAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::CPUDispatch: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    unsigned cpusSize = Record.readInt();
+    SmallVector<IdentifierInfo *, 4> cpus;
+    cpus.reserve(cpusSize);
+    for (unsigned i = 0; i != cpusSize; ++i)
+      cpus.push_back(Record.getIdentifierInfo());
+    New = new (Context) CPUDispatchAttr(Range, Context, cpus.data(), cpusSize, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::CPUSpecific: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    unsigned cpusSize = Record.readInt();
+    SmallVector<IdentifierInfo *, 4> cpus;
+    cpus.reserve(cpusSize);
+    for (unsigned i = 0; i != cpusSize; ++i)
+      cpus.push_back(Record.getIdentifierInfo());
+    New = new (Context) CPUSpecificAttr(Range, Context, cpus.data(), cpusSize, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -505,6 +578,20 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::Callback: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    unsigned encodingSize = Record.readInt();
+    SmallVector<int, 4> encoding;
+    encoding.reserve(encodingSize);
+    for (unsigned i = 0; i != encodingSize; ++i)
+      encoding.push_back(Record.readInt());
+    New = new (Context) CallbackAttr(Range, Context, encoding.data(), encodingSize, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::Capability: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -539,6 +626,16 @@
     unsigned Spelling = Record.readInt();
     FunctionDecl * functionDecl = Record.GetLocalDeclAs<FunctionDecl >(Record.readInt());
     New = new (Context) CleanupAttr(Range, Context, functionDecl, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::CodeSeg: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    std::string name= Record.readString();
+    New = new (Context) CodeSegAttr(Range, Context, name, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -626,11 +723,29 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::DLLExportStaticLocal: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) DLLExportStaticLocalAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::DLLImport: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) DLLImportAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::DLLImportStaticLocal: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) DLLImportStaticLocalAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -705,6 +820,15 @@
     unsigned Spelling = Record.readInt();
     EnumExtensibilityAttr::Kind extensibility(static_cast<EnumExtensibilityAttr::Kind>(Record.readInt()));
     New = new (Context) EnumExtensibilityAttr(Range, Context, extensibility, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ExcludeFromExplicitInstantiation: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ExcludeFromExplicitInstantiationAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -795,8 +919,19 @@
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
-    int formatIdx = Record.readInt();
+    ParamIdx formatIdx = ParamIdx::deserialize(Record.readInt());
     New = new (Context) FormatArgAttr(Range, Context, formatIdx, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::FortifyStdLib: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    int type = Record.readInt();
+    int flag = Record.readInt();
+    New = new (Context) FortifyStdLibAttr(Range, Context, type, flag, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -929,6 +1064,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::LifetimeBound: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) LifetimeBoundAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::LockReturned: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -1053,6 +1197,16 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) MinSizeAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::MinVectorWidth: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    unsigned vectorWidth = Record.readInt();
+    New = new (Context) MinVectorWidthAttr(Range, Context, vectorWidth, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1183,6 +1337,22 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::NoDeref: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) NoDerefAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::NoDestroy: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) NoDestroyAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::NoDuplicate: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -1262,11 +1432,29 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::NoSpeculativeLoadHardening: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) NoSpeculativeLoadHardeningAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::NoSplitStack: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) NoSplitStackAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::NoStackProtector: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) NoStackProtectorAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1294,10 +1482,10 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     unsigned argsSize = Record.readInt();
-    SmallVector<unsigned, 4> args;
+    SmallVector<ParamIdx, 4> args;
     args.reserve(argsSize);
     for (unsigned i = 0; i != argsSize; ++i)
-      args.push_back(Record.readInt());
+      args.push_back(ParamIdx::deserialize(Record.readInt()));
     New = new (Context) NonNullAttr(Range, Context, args.data(), argsSize, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
@@ -1369,10 +1557,20 @@
     break;
   }
   case attr::OMPDeclareTargetDecl: {
+    bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     OMPDeclareTargetDeclAttr::MapTypeTy mapType(static_cast<OMPDeclareTargetDeclAttr::MapTypeTy>(Record.readInt()));
     New = new (Context) OMPDeclareTargetDeclAttr(Range, Context, mapType, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OMPReferencedVar: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    Expr * ref = Record.readExpr();
+    New = new (Context) OMPReferencedVarAttr(Range, Context, ref, Spelling);
     New->setImplicit(isImplicit);
     break;
   }
@@ -1381,6 +1579,60 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) OMPThreadPrivateDeclAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSConsumed: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSConsumedAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSConsumesThis: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSConsumesThisAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSReturnsNotRetained: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSReturnsNotRetainedAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSReturnsRetained: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSReturnsRetainedAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSReturnsRetainedOnNonZero: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSReturnsRetainedOnNonZeroAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OSReturnsRetainedOnZero: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OSReturnsRetainedOnZeroAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1449,12 +1701,43 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::ObjCExternallyRetained: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ObjCExternallyRetainedAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ObjCGC: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    IdentifierInfo * kind = Record.getIdentifierInfo();
+    New = new (Context) ObjCGCAttr(Range, Context, kind, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::ObjCIndependentClass: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) ObjCIndependentClassAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ObjCInertUnsafeUnretained: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ObjCInertUnsafeUnretainedAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ObjCKindOf: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ObjCKindOfAttr(Range, Context, Spelling);
     New->setImplicit(isImplicit);
     break;
   }
@@ -1473,6 +1756,23 @@
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) ObjCNSObjectAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ObjCNonLazyClass: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ObjCNonLazyClassAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::ObjCOwnership: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    IdentifierInfo * kind = Record.getIdentifierInfo();
+    New = new (Context) ObjCOwnershipAttr(Range, Context, kind, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1553,6 +1853,27 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::OpenCLConstantAddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OpenCLConstantAddressSpaceAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OpenCLGenericAddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OpenCLGenericAddressSpaceAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OpenCLGlobalAddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OpenCLGlobalAddressSpaceAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::OpenCLIntelReqdSubGroupSize: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -1569,6 +1890,20 @@
     unsigned Spelling = Record.readInt();
     New = new (Context) OpenCLKernelAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OpenCLLocalAddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OpenCLLocalAddressSpaceAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::OpenCLPrivateAddressSpace: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) OpenCLPrivateAddressSpaceAttr(Range, Context, Spelling);
     New->setImplicit(isImplicit);
     break;
   }
@@ -1613,10 +1948,10 @@
     unsigned Spelling = Record.readInt();
     IdentifierInfo * module = Record.getIdentifierInfo();
     unsigned argsSize = Record.readInt();
-    SmallVector<unsigned, 4> args;
+    SmallVector<ParamIdx, 4> args;
     args.reserve(argsSize);
     for (unsigned i = 0; i != argsSize; ++i)
-      args.push_back(Record.readInt());
+      args.push_back(ParamIdx::deserialize(Record.readInt()));
     New = new (Context) OwnershipAttr(Range, Context, module, args.data(), argsSize, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
@@ -1747,6 +2082,20 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::Ptr32: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) Ptr32Attr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::Ptr64: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) Ptr64Attr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::Pure: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -1756,11 +2105,30 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::RISCVInterrupt: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    RISCVInterruptAttr::InterruptType interrupt(static_cast<RISCVInterruptAttr::InterruptType>(Record.readInt()));
+    New = new (Context) RISCVInterruptAttr(Range, Context, interrupt, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::RegCall: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
     unsigned Spelling = Record.readInt();
     New = new (Context) RegCallAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::Reinitializes: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) ReinitializesAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -1858,6 +2226,13 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::SPtr: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) SPtrAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::ScopedLockable: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -1918,6 +2293,15 @@
     for (unsigned i = 0; i != argsSize; ++i)
       args.push_back(Record.readExpr());
     New = new (Context) SharedTrylockFunctionAttr(Range, Context, successValue, args.data(), argsSize, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::SpeculativeLoadHardening: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) SpeculativeLoadHardeningAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -2047,6 +2431,15 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::TrivialABI: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) TrivialABIAttr(Range, Context, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::TryAcquireCapability: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -2059,6 +2452,27 @@
       args.push_back(Record.readExpr());
     New = new (Context) TryAcquireCapabilityAttr(Range, Context, successValue, args.data(), argsSize, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::TypeNonNull: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) TypeNonNullAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::TypeNullUnspecified: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) TypeNullUnspecifiedAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::TypeNullable: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) TypeNullableAttr(Range, Context, Spelling);
     New->setImplicit(isImplicit);
     break;
   }
@@ -2085,6 +2499,13 @@
     New->setImplicit(isImplicit);
     break;
   }
+  case attr::UPtr: {
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) UPtrAttr(Range, Context, Spelling);
+    New->setImplicit(isImplicit);
+    break;
+  }
   case attr::Unavailable: {
     bool isInherited = Record.readInt();
     bool isImplicit = Record.readInt();
@@ -2092,6 +2513,15 @@
     std::string message= Record.readString();
     UnavailableAttr::ImplicitReason implicitReason(static_cast<UnavailableAttr::ImplicitReason>(Record.readInt()));
     New = new (Context) UnavailableAttr(Range, Context, message, implicitReason, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::Uninitialized: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    New = new (Context) UninitializedAttr(Range, Context, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;
@@ -2204,6 +2634,26 @@
     unsigned Spelling = Record.readInt();
     std::string aliasee= Record.readString();
     New = new (Context) WeakRefAttr(Range, Context, aliasee, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::WebAssemblyImportModule: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    std::string importModule= Record.readString();
+    New = new (Context) WebAssemblyImportModuleAttr(Range, Context, importModule, Spelling);
+    cast<InheritableAttr>(New)->setInherited(isInherited);
+    New->setImplicit(isImplicit);
+    break;
+  }
+  case attr::WebAssemblyImportName: {
+    bool isInherited = Record.readInt();
+    bool isImplicit = Record.readInt();
+    unsigned Spelling = Record.readInt();
+    std::string importName= Record.readString();
+    New = new (Context) WebAssemblyImportNameAttr(Range, Context, importName, Spelling);
     cast<InheritableAttr>(New)->setInherited(isInherited);
     New->setImplicit(isImplicit);
     break;

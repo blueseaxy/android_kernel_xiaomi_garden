@@ -27,8 +27,8 @@
  *	 CMOS sensor header file
  *
  ****************************************************************************/
-#ifndef _HYNIX_HI1337_III_SENSOR_H
-#define _HYNIX_HI1337_III_SENSOR_H
+#ifndef _HYNIX_HI1337_IIII_SENSOR_H
+#define _HYNIX_HI1337_IIII_SENSOR_H
 
 #include "kd_camera_typedef.h"
 #include "kd_imgsensor.h"

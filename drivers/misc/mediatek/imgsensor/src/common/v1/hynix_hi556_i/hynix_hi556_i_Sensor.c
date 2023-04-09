@@ -24,9 +24,9 @@
 #include "hynix_hi556_i_Sensor.h"
 
 #define PFX "hi556_camera_sensor"
-#define LOG_INF(format, args...)    \
-	pr_debug(PFX "[%s] " format, __func__, ##args)
-
+/*#define LOG_INF(format, args...)    \
+	pr_debug(PFX "[%s] " format, __func__, ##args) */
+#define LOG_INF(format, args...)
 #define MULTI_WRITE 1
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
@@ -323,10 +323,11 @@ static void write_shutter(kal_uint32 shutter)
 		// ADD ODIN
 		realtime_fps = imgsensor.pclk * 10 /
 			(imgsensor.line_length * imgsensor.frame_length);
-		if (realtime_fps > 300 && realtime_fps < 320)
+		if (realtime_fps > 300 && realtime_fps < 320) {
 			set_max_framerate(300, 0);
 		// ADD END
 			write_cmos_sensor(0x0006, imgsensor.frame_length);
+		}
 	}
 
 	// Update Shutter

@@ -1,9 +1,8 @@
 //===--- APValue.h - Union class for APFloat/APSInt/Complex -----*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -14,6 +13,7 @@
 #ifndef LLVM_CLANG_AST_APVALUE_H
 #define LLVM_CLANG_AST_APVALUE_H
 
+#include "clang/Basic/FixedPoint.h"
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APSInt.h"
@@ -43,6 +43,7 @@ public:
     Uninitialized,
     Int,
     Float,
+    FixedPoint,
     ComplexInt,
     ComplexFloat,
     LValue,
@@ -53,7 +54,58 @@ public:
     MemberPointer,
     AddrLabelDiff
   };
-  typedef llvm::PointerUnion<const ValueDecl *, const Expr *> LValueBase;
+
+  class LValueBase {
+  public:
+    typedef llvm::PointerUnion<const ValueDecl *, const Expr *> PtrTy;
+
+    LValueBase() : CallIndex(0), Version(0) {}
+
+    template <class T>
+    LValueBase(T P, unsigned I = 0, unsigned V = 0)
+        : Ptr(P), CallIndex(I), Version(V) {}
+
+    template <class T>
+    bool is() const { return Ptr.is<T>(); }
+
+    template <class T>
+    T get() const { return Ptr.get<T>(); }
+
+    template <class T>
+    T dyn_cast() const { return Ptr.dyn_cast<T>(); }
+
+    void *getOpaqueValue() const;
+
+    bool isNull() const;
+
+    explicit operator bool () const;
+
+    PtrTy getPointer() const {
+      return Ptr;
+    }
+
+    unsigned getCallIndex() const {
+      return CallIndex;
+    }
+
+    void setCallIndex(unsigned Index) {
+      CallIndex = Index;
+    }
+
+    unsigned getVersion() const {
+      return Version;
+    }
+
+    bool operator==(const LValueBase &Other) const {
+      return Ptr == Other.Ptr && CallIndex == Other.CallIndex &&
+             Version == Other.Version;
+    }
+
+  private:
+    PtrTy Ptr;
+    unsigned CallIndex, Version;
+  };
+
   typedef llvm::PointerIntPair<const Decl *, 1, bool> BaseOrMemberType;
   union LValuePathEntry {
     /// BaseOrMember - The FieldDecl or CXXRecordDecl indicating the next item
@@ -124,6 +176,9 @@ public:
   explicit APValue(APFloat F) : Kind(Uninitialized) {
     MakeFloat(); setFloat(std::move(F));
   }
+  explicit APValue(APFixedPoint FX) : Kind(Uninitialized) {
+    MakeFixedPoint(std::move(FX));
+  }
   explicit APValue(const APValue *E, unsigned N) : Kind(Uninitialized) {
     MakeVector(); setVector(E, N);
   }
@@ -135,15 +190,15 @@ public:
   }
   APValue(const APValue &RHS);
   APValue(APValue &&RHS) : Kind(Uninitialized) { swap(RHS); }
-  APValue(LValueBase B, const CharUnits &O, NoLValuePath N, unsigned CallIndex,
+  APValue(LValueBase B, const CharUnits &O, NoLValuePath N,
           bool IsNullPtr = false)
       : Kind(Uninitialized) {
-    MakeLValue(); setLValue(B, O, N, CallIndex, IsNullPtr);
+    MakeLValue(); setLValue(B, O, N, IsNullPtr);
   }
   APValue(LValueBase B, const CharUnits &O, ArrayRef<LValuePathEntry> Path,
-          bool OnePastTheEnd, unsigned CallIndex, bool IsNullPtr = false)
+          bool OnePastTheEnd, bool IsNullPtr = false)
       : Kind(Uninitialized) {
-    MakeLValue(); setLValue(B, O, Path, OnePastTheEnd, CallIndex, IsNullPtr);
+    MakeLValue(); setLValue(B, O, Path, OnePastTheEnd, IsNullPtr);
   }
   APValue(UninitArray, unsigned InitElts, unsigned Size) : Kind(Uninitialized) {
     MakeArray(InitElts, Size);
@@ -168,20 +223,21 @@ public:
     MakeUninit();
   }
 
-  /// \brief Returns whether the object performed allocations.
+  /// Returns whether the object performed allocations.
   ///
   /// If APValues are constructed via placement new, \c needsCleanup()
   /// indicates whether the destructor must be called in order to correctly
   /// free all allocated memory.
   bool needsCleanup() const;
 
-  /// \brief Swaps the contents of this and the given APValue.
+  /// Swaps the contents of this and the given APValue.
   void swap(APValue &RHS);
 
   ValueKind getKind() const { return Kind; }
   bool isUninit() const { return Kind == Uninitialized; }
   bool isInt() const { return Kind == Int; }
   bool isFloat() const { return Kind == Float; }
+  bool isFixedPoint() const { return Kind == FixedPoint; }
   bool isComplexInt() const { return Kind == ComplexInt; }
   bool isComplexFloat() const { return Kind == ComplexFloat; }
   bool isLValue() const { return Kind == LValue; }
@@ -206,12 +262,26 @@ public:
     return const_cast<APValue*>(this)->getInt();
   }
 
+  /// Try to convert this value to an integral constant. This works if it's an
+  /// integer, null pointer, or offset from a null pointer. Returns true on
+  /// success.
+  bool toIntegralConstant(APSInt &Result, QualType SrcTy,
+                          const ASTContext &Ctx) const;
+
   APFloat &getFloat() {
     assert(isFloat() && "Invalid accessor");
     return *(APFloat*)(char*)Data.buffer;
   }
   const APFloat &getFloat() const {
     return const_cast<APValue*>(this)->getFloat();
+  }
+
+  APFixedPoint &getFixedPoint() {
+    assert(isFixedPoint() && "Invalid accessor");
+    return *(APFixedPoint *)(char *)Data.buffer;
+  }
+  const APFixedPoint &getFixedPoint() const {
+    return const_cast<APValue *>(this)->getFixedPoint();
   }
 
   APSInt &getComplexIntReal() {
@@ -255,6 +325,7 @@ public:
   bool hasLValuePath() const;
   ArrayRef<LValuePathEntry> getLValuePath() const;
   unsigned getLValueCallIndex() const;
+  unsigned getLValueVersion() const;
   bool isNullPointer() const;
 
   APValue &getVectorElt(unsigned I) {
@@ -354,6 +425,10 @@ public:
     assert(isFloat() && "Invalid accessor");
     *(APFloat *)(char *)Data.buffer = std::move(F);
   }
+  void setFixedPoint(APFixedPoint FX) {
+    assert(isFixedPoint() && "Invalid accessor");
+    *(APFixedPoint *)(char *)Data.buffer = std::move(FX);
+  }
   void setVector(const APValue *E, unsigned N) {
     assert(isVector() && "Invalid accessor");
     ((Vec*)(char*)Data.buffer)->Elts = new APValue[N];
@@ -376,10 +451,10 @@ public:
     ((ComplexAPFloat *)(char *)Data.buffer)->Imag = std::move(I);
   }
   void setLValue(LValueBase B, const CharUnits &O, NoLValuePath,
-                 unsigned CallIndex, bool IsNullPtr);
+                 bool IsNullPtr);
   void setLValue(LValueBase B, const CharUnits &O,
                  ArrayRef<LValuePathEntry> Path, bool OnePastTheEnd,
-                 unsigned CallIndex, bool IsNullPtr);
+                 bool IsNullPtr);
   void setUnion(const FieldDecl *Field, const APValue &Value) {
     assert(isUnion() && "Invalid accessor");
     ((UnionData*)(char*)Data.buffer)->Field = Field;
@@ -412,6 +487,11 @@ private:
     assert(isUninit() && "Bad state change");
     new ((void*)(char*)Data.buffer) APFloat(0.0);
     Kind = Float;
+  }
+  void MakeFixedPoint(APFixedPoint &&FX) {
+    assert(isUninit() && "Bad state change");
+    new ((void *)(char *)Data.buffer) APFixedPoint(std::move(FX));
+    Kind = FixedPoint;
   }
   void MakeVector() {
     assert(isUninit() && "Bad state change");
@@ -450,5 +530,15 @@ private:
 };
 
 } // end namespace clang.
+
+namespace llvm {
+template<> struct DenseMapInfo<clang::APValue::LValueBase> {
+  static clang::APValue::LValueBase getEmptyKey();
+  static clang::APValue::LValueBase getTombstoneKey();
+  static unsigned getHashValue(const clang::APValue::LValueBase &Base);
+  static bool isEqual(const clang::APValue::LValueBase &LHS,
+                      const clang::APValue::LValueBase &RHS);
+};
+}
 
 #endif

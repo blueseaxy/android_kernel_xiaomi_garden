@@ -1,9 +1,8 @@
 //===- Core/SymbolTable.h - Main Symbol Table -----------------------------===//
 //
-//                             The LLVM Linker
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -12,7 +11,7 @@
 
 #include "lld/Common/LLVM.h"
 #include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/DJB.h"
 #include <cstring>
 #include <map>
 #include <vector>
@@ -27,35 +26,35 @@ class ResolverOptions;
 class SharedLibraryAtom;
 class UndefinedAtom;
 
-/// \brief The SymbolTable class is responsible for coalescing atoms.
+/// The SymbolTable class is responsible for coalescing atoms.
 ///
 /// All atoms coalescable by-name or by-content should be added.
 /// The method replacement() can be used to find the replacement atom
 /// if an atom has been coalesced away.
 class SymbolTable {
 public:
-  /// @brief add atom to symbol table
+  /// add atom to symbol table
   bool add(const DefinedAtom &);
 
-  /// @brief add atom to symbol table
+  /// add atom to symbol table
   bool add(const UndefinedAtom &);
 
-  /// @brief add atom to symbol table
+  /// add atom to symbol table
   bool add(const SharedLibraryAtom &);
 
-  /// @brief add atom to symbol table
+  /// add atom to symbol table
   bool add(const AbsoluteAtom &);
 
-  /// @brief returns atom in symbol table for specified name (or nullptr)
+  /// returns atom in symbol table for specified name (or nullptr)
   const Atom *findByName(StringRef sym);
 
-  /// @brief returns vector of remaining UndefinedAtoms
+  /// returns vector of remaining UndefinedAtoms
   std::vector<const UndefinedAtom *> undefines();
 
-  /// @brief if atom has been coalesced away, return replacement, else return atom
+  /// if atom has been coalesced away, return replacement, else return atom
   const Atom *replacement(const Atom *);
 
-  /// @brief if atom has been coalesced away, return true
+  /// if atom has been coalesced away, return true
   bool isCoalescedAway(const Atom *);
 
 private:
@@ -65,7 +64,7 @@ private:
     static StringRef getEmptyKey() { return StringRef(); }
     static StringRef getTombstoneKey() { return StringRef(" ", 1); }
     static unsigned getHashValue(StringRef const val) {
-      return llvm::HashString(val);
+      return llvm::djbHash(val, 0);
     }
     static bool isEqual(StringRef const lhs, StringRef const rhs) {
       return lhs.equals(rhs);

@@ -1,9 +1,8 @@
 //===- ConstantRange.h - Represent a range ----------------------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 //
@@ -54,7 +53,7 @@ public:
   /// Initialize a range to hold the single specified value.
   ConstantRange(APInt Value);
 
-  /// @brief Initialize a range of values explicitly. This will assert out if
+  /// Initialize a range of values explicitly. This will assert out if
   /// Lower==Upper and Lower != Min or Max value for its type. It will also
   /// assert out if the two APInt's are not the same bit width.
   ConstantRange(APInt Lower, APInt Upper);
@@ -316,6 +315,10 @@ public:
   /// Return a new range representing the possible values resulting from a
   /// logical right shift of a value in this range and a value in \p Other.
   ConstantRange lshr(const ConstantRange &Other) const;
+
+  /// Return a new range representing the possible values resulting from a
+  /// arithmetic right shift of a value in this range and a value in \p Other.
+  ConstantRange ashr(const ConstantRange &Other) const;
 
   /// Return a new range that is the logical not of the current set.
   ConstantRange inverse() const;

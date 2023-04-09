@@ -48,6 +48,8 @@
 .Case("loop", true)
 .Case("unroll", true)
 .Case("nounroll", true)
+.Case("unroll_and_jam", true)
+.Case("nounroll_and_jam", true)
 .Case("interrupt", true)
 .Case("mode", true)
 .Case("declare simd", true)
@@ -63,6 +65,7 @@
 .Case("ownership_takes", true)
 .Case("param_typestate", true)
 .Case("pcs", true)
+.Case("interrupt", true)
 .Case("return_typestate", true)
 .Case("set_typestate", true)
 .Case("test_typestate", true)
@@ -70,6 +73,16 @@
 .Case("type_visibility", true)
 .Case("visibility", true)
 #endif // CLANG_ATTR_IDENTIFIER_ARG_LIST
+
+#if defined(CLANG_ATTR_VARIADIC_IDENTIFIER_ARG_LIST)
+.Case("cpu_dispatch", true)
+.Case("cpu_specific", true)
+.Case("callback", true)
+#endif // CLANG_ATTR_VARIADIC_IDENTIFIER_ARG_LIST
+
+#if defined(CLANG_ATTR_THIS_ISA_IDENTIFIER_ARG_LIST)
+.Case("callback", true)
+#endif // CLANG_ATTR_THIS_ISA_IDENTIFIER_ARG_LIST
 
 #if defined(CLANG_ATTR_TYPE_ARG_LIST)
 .Case("iboutletcollection", true)

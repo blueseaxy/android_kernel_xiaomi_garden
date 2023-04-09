@@ -1,9 +1,8 @@
 //===--- RefactoringActionRulesInternal.h - Clang refactoring library -----===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 
@@ -57,7 +56,11 @@ void invokeRuleAfterValidatingRequirements(
     return Consumer.handleError(std::move(Err));
   // Construct the target action rule by extracting the evaluated
   // requirements from Expected<> wrappers and then run it.
-  RuleType((*std::get<Is>(Values))...).invoke(Consumer, Context);
+  auto Rule =
+      RuleType::initiate(Context, std::move((*std::get<Is>(Values)))...);
+  if (!Rule)
+    return Consumer.handleError(Rule.takeError());
+  Rule->invoke(Consumer, Context);
 }
 
 inline void visitRefactoringOptionsImpl(RefactoringOptionVisitor &) {}
@@ -141,7 +144,6 @@ createRefactoringActionRule(const RequirementTypes &... Requirements) {
           Visitor, Requirements,
           llvm::index_sequence_for<RequirementTypes...>());
     }
-
   private:
     std::tuple<RequirementTypes...> Requirements;
   };

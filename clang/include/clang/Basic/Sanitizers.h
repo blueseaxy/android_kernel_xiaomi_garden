@@ -1,15 +1,14 @@
-//===--- Sanitizers.h - C Language Family Language Options ------*- C++ -*-===//
+//===- Sanitizers.h - C Language Family Language Options --------*- C++ -*-===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-///
+//
 /// \file
-/// \brief Defines the clang::SanitizerKind enum.
-///
+/// Defines the clang::SanitizerKind enum.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_CLANG_BASIC_SANITIZERS_H
@@ -18,10 +17,12 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/MathExtras.h"
+#include <cassert>
+#include <cstdint>
 
 namespace clang {
 
-typedef uint64_t SanitizerMask;
+using SanitizerMask = uint64_t;
 
 namespace SanitizerKind {
 
@@ -43,19 +44,19 @@ enum SanitizerOrdinal : uint64_t {
   const SanitizerMask ID##Group = 1ULL << SO_##ID##Group;
 #include "clang/Basic/Sanitizers.def"
 
-}
+} // namespace SanitizerKind
 
 struct SanitizerSet {
-  /// \brief Check if a certain (single) sanitizer is enabled.
+  /// Check if a certain (single) sanitizer is enabled.
   bool has(SanitizerMask K) const {
     assert(llvm::isPowerOf2_64(K));
     return Mask & K;
   }
 
-  /// \brief Check if one or more sanitizers are enabled.
+  /// Check if one or more sanitizers are enabled.
   bool hasOneOf(SanitizerMask K) const { return Mask & K; }
 
-  /// \brief Enable or disable a certain (single) sanitizer.
+  /// Enable or disable a certain (single) sanitizer.
   void set(SanitizerMask K, bool Value) {
     assert(llvm::isPowerOf2_64(K));
     Mask = Value ? (Mask | K) : (Mask & ~K);
@@ -64,10 +65,10 @@ struct SanitizerSet {
   /// Disable the sanitizers specified in \p K.
   void clear(SanitizerMask K = SanitizerKind::All) { Mask &= ~K; }
 
-  /// \brief Returns true if at least one sanitizer is enabled.
+  /// Returns true if no sanitizers are enabled.
   bool empty() const { return Mask == 0; }
 
-  /// \brief Bitmask of enabled sanitizers.
+  /// Bitmask of enabled sanitizers.
   SanitizerMask Mask = 0;
 };
 
@@ -80,11 +81,12 @@ SanitizerMask parseSanitizerValue(StringRef Value, bool AllowGroups);
 SanitizerMask expandSanitizerGroups(SanitizerMask Kinds);
 
 /// Return the sanitizers which do not affect preprocessing.
-static inline SanitizerMask getPPTransparentSanitizers() {
+inline SanitizerMask getPPTransparentSanitizers() {
   return SanitizerKind::CFI | SanitizerKind::Integer |
-         SanitizerKind::Nullability | SanitizerKind::Undefined;
+         SanitizerKind::ImplicitConversion | SanitizerKind::Nullability |
+         SanitizerKind::Undefined;
 }
 
-}  // end namespace clang
+} // namespace clang
 
-#endif
+#endif // LLVM_CLANG_BASIC_SANITIZERS_H

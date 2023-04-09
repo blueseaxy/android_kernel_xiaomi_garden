@@ -25,9 +25,9 @@
 #include "hynix_hi1337_iiii_Sensor.h"
 
 #define PFX "hi1337_camera_sensor"
-#define LOG_INF(format, args...)    \
-	pr_devel(PFX "[%s] " format, __func__, ##args)
-
+/*#define LOG_INF(format, args...)    \
+	pr_debug(PFX "[%s] " format, __func__, ##args) */
+#define LOG_INF(format, args...)
 //PDAF
 #define ENABLE_PDAF 1
 #define e2prom 0
@@ -46,7 +46,7 @@ static DEFINE_SPINLOCK(imgsensor_drv_lock);
 static struct imgsensor_info_struct imgsensor_info = {
 	.sensor_id = HYNIX_HI1337_IIII_SENSOR_ID,
 
-	.checksum_value = 0xb7c53a42,       //0x6d01485c // Auto Test Mode ÃßÈÄ..
+	.checksum_value = 0xb7c53a42,       //0x6d01485c // Auto Test Mode ..
 
 	.pre = {
 		.pclk = 576000000,	 //VT CLK : 72MHz * 8 = =	576000000				//record different mode's pclk
@@ -3970,3 +3970,4 @@ UINT32 HYNIX_HI1337_IIII_SensorInit(struct SENSOR_FUNCTION_STRUCT **pfFunc)
 		*pfFunc =  &sensor_func;
 	return ERROR_NONE;
 }	/*	HYNIX_HI1337_I_SensorInit	*/
+
