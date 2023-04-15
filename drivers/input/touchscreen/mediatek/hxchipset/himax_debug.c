@@ -643,11 +643,11 @@ static ssize_t himax_proc_register_write(char *buf, size_t len)
 
 			byte_length = count - 1;
 			if (strcmp(HX_85XX_H_SERIES_PWON,
-				private_ts->chip_name) == 0 && cfg_flag == 0)
+				private_ts->chip_name) == 0 && cfg_flag == 0){
 				cfg_flag = 2;
 				g_core_fp.fp_register_write(reg_cmd,
 					byte_length, &w_data[0], cfg_flag);
-
+}
 			}
 		break;
 		};

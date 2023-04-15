@@ -424,10 +424,12 @@ static int battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CHARGING_ENABLED:
 	if (data->BAT_STATUS == POWER_SUPPLY_STATUS_CHARGING)
+         {
 		val->intval = 1;
-	else
+	}else{
 		val->intval = 0;
 		break;
+          }
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
 		val->intval = 5000;
 		break;

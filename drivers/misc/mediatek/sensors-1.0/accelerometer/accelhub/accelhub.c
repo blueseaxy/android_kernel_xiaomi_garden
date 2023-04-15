@@ -251,7 +251,7 @@ static ssize_t show_chipinfo_value(struct device_driver *ddri, char *buf)
 	res = sensor_set_cmd_to_hub(ID_ACCELEROMETER, CUST_ACTION_GET_SENSOR_INFO, &devinfo);
 	if(res < 0) {
 		pr_err("Get gsensor info err\n");
-		snprintf(devinfo.name, PAGE_SIZE, "%s\n", "");
+		snprintf(devinfo.name, sizeof(devinfo.name), "%s\n", "");
 	}
 
 //	accelhub_ReadAllReg(strbuf, ACCELHUB_BUFSIZE);
